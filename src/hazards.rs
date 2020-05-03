@@ -2,6 +2,11 @@ pub struct Location {
     row: usize,
     col: usize,
 }
+impl Location {
+    pub fn new(row: usize, col: usize) -> Self {
+        Self { row, col }
+    }
+}
 pub struct Hazard {
     hazard_type: HazardType,
     locations: Vec<Location>,
@@ -27,7 +32,18 @@ impl Hazard {
 
     pub fn show_output(&self) -> String {
         let mut out = String::from("OUTPUT :");
-
+        out.push_str(self.hazard_type.display_type());
+        out.push(':');
+        out.push(' ');
+        for loc in &self.locations {
+            out.push_str(&loc.row.to_string());
+            out.push(' ');
+            out.push_str(&loc.col.to_string());
+        }
+        out.push(' ');
+        out.push(':');
+        out.push_str(self.hazard_type.display_id());
+        out.push(':');
         out
     }
 }
@@ -79,6 +95,14 @@ pub enum WarnId {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn display_test() {
+        assert_eq!(
+            "OUTPUT :SYNTAX: 7 1 :SYNTAX:",
+            Hazard::new_one_loc(HazardType::Syntax, Location::new(7, 1)).show_output()
+        )
+    }
 
     #[test]
     fn display_type_tests() {
