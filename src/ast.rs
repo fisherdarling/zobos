@@ -1,3 +1,5 @@
+use petgraph::Graph
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AstKind {
     Program,
@@ -30,7 +32,6 @@ pub enum AstKind {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AstNode {
-    pub kind: AstKind,
-    pub children: Vec<AstNode>,
+pub struct AstGraph {
+    pub graph: Graph<AstKind, usize>,
 }
