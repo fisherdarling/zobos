@@ -1,0 +1,14 @@
+const int ONE = 1;
+int prev = current = ONE;
+string begin = "the Beguine";
+emit begin 4 10+-3;
+while ( current < 10000 ) {
+	emit symtable;
+	int tmp = current;
+	current = current + prev;
+	prev = tmp;
+	emit symtable;
+}
+string end = "inif";
+emit end 3 1;
+emit end 0 3;

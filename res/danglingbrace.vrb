@@ -1,0 +1,2 @@
+OUTPUT :SYNTAX: 7 1 :SYNTAX:
+state /1/ input ('rbrace', '}') expected bool,const,emit,float,id,if,int,lbrace,string,while,$

@@ -1,0 +1,2 @@
+OUTPUT :SYNTAX: 8 28 :SYNTAX:
+state /72/ input ('intval', '8') expected eq,geq,gt,leq,lt,rparen

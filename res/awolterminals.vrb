@@ -1,0 +1,2 @@
+OUTPUT :SYNTAX: 1 70 :SYNTAX:
+state /94/ input ('$', '$') expected bool,comma,compl,div,eq,float,floatval,geq,gt,id,int,intval,leq,lparen,lt,minus,mod,mult,not,plus,rparen,sc,stringval

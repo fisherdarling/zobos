@@ -1,0 +1,2 @@
+OUTPUT :SYNTAX: 1 1 :SYNTAX:
+state /0/ input ('stringval', '"back end forward"') expected bool,const,emit,float,id,if,int,lbrace,rbrace,string,while,$

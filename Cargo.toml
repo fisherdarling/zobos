@@ -1,0 +1,12 @@
+[package]
+name = "zobos"
+version = "0.1.0"
+authors = ["Fisher Darling <fdarling@mines.edu>"]
+edition = "2018"
+
+[[bin]]
+name = "ZOBOS"
+path = "src/bin/main.rs"
+
+[dependencies]
+

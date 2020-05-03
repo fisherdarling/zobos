@@ -1,0 +1,2 @@
+string word = "hello world";
+emit word 0 11;

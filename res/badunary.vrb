@@ -1,0 +1,2 @@
+OUTPUT :SYNTAX: 2 64 :SYNTAX:
+state /48/ input ('div', '/') expected bool,compl,float,floatval,id,int,intval,lparen,minus,not,plus,stringval
