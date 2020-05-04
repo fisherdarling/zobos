@@ -55,6 +55,13 @@ impl fmt::Display for AstKind {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct AstNode {
+    pub kind: AstKind,
+    pub span: (usize, usize),
+    pub children: Vec<AstNode>,
+}
+
 #[derive(Debug, Clone)]
 pub struct AstGraph {
     pub graph: Graph<AstKind, usize>,
