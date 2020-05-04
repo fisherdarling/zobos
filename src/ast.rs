@@ -1,11 +1,12 @@
 use petgraph::dot::{Config, Dot};
 use petgraph::Graph;
+use std::cmp::PartialEq;
 use std::fmt;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AstKind {
     Program,
     Stmt,
@@ -40,7 +41,7 @@ impl fmt::Display for AstKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AstKind::Float(fl) => write!(f, "{}", fl),
-            AstKind::int(i) => write!(f, "{}", i),
+            AstKind::Int(i) => write!(f, "{}", i),
             AstKind::Bool(b) => write!(f, "{}", b),
             AstKind::Eq => write!(f, "=="),
             AstKind::Leq => write!(f, "<="),
@@ -54,7 +55,7 @@ impl fmt::Display for AstKind {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct AstGraph {
     pub graph: Graph<AstKind, usize>,
 }
