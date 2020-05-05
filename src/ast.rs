@@ -37,7 +37,7 @@ use std::path::Path;
 //     Bool(bool),
 // }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum AstKind {
     Token,
     EOI,
@@ -104,6 +104,42 @@ impl AstNode {
             data: String::new(),
             children: Vec::new(),
         }
+    }
+
+    // Export a graph to something that Graphvis can us
+    pub fn export_graph(&self, file_path: impl AsRef<Path>) {
+        let graph = self.create_pet_graph();
+        let mut f = File::create(file_path).unwrap();
+        let output = format!("{}", Dot::with_config(&graph, &[Config::EdgeNoLabel]));
+        f.write_all(&output.as_bytes())
+            .expect("could not write file");
+    }
+
+    fn create_pet_graph(&self) -> Graph<AstKind, usize> {
+        let mut graph = Graph::<_, usize>::new();
+        let root = graph.add_node(self.kind);
+
+        for child in self.children.iter() {
+            let cnode = graph.add_node(child.kind);
+            graph.add_edge(root, cnode, 0);
+            graph = self.create_pet_graph_rec(graph, child, cnode);
+        }
+        graph
+    }
+
+    fn create_pet_graph_rec(
+        &self,
+        mut graph: Graph<AstKind, usize>,
+        node: &AstNode,
+        parent: petgraph::graph::NodeIndex,
+    ) -> Graph<AstKind, usize> {
+        for child in node.children.iter() {
+            let cnode = graph.add_node(child.kind);
+            graph.add_edge(parent, cnode, 0);
+
+            graph = self.create_pet_graph_rec(graph, child, cnode);
+        }
+        graph
     }
 }
 
