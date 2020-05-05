@@ -121,7 +121,7 @@ impl Parser {
         tokens.reverse();
 
         while let Some(token) = tokens.last().cloned().or_else(|| Some(ParseInput::EOI)) {
-            println!("Stack: {:#?}", stack);
+            // println!("Stack: {:#?}", stack);
 
             // let t = Symbol::from_parse(&token.id).unwrap();
 
@@ -131,10 +131,10 @@ impl Parser {
                     top_state, token
                 ));
 
-                println!(
-                    "State: {}, Token: {:?}, Action: {:?}\n",
-                    top_state, token, action
-                );
+                // println!(
+                //     "State: {}, Token: {:?}, Action: {:?}\n",
+                //     top_state, token, action
+                // );
 
                 match *action {
                     Action::Shift(to_state) => {
@@ -169,11 +169,11 @@ impl Parser {
         stack: &mut Vec<ParseState>,
         input: &mut Vec<ParseInput>,
     ) {
-        println!("Reduce({}): Stack: {:?}", rule, stack);
+        // println!("Reduce({}): Stack: {:?}", rule, stack);
 
         let (non_terminal, production) = &self.items[rule];
 
-        println!("{:?} -> {:?}\n", non_terminal, production);
+        // println!("{:?} -> {:?}\n", non_terminal, production);
 
         let ast_kind = ast_kind_from_str(non_terminal.non_terminal());
         let mut node = AstNode::new(ast_kind);
