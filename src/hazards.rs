@@ -1,3 +1,8 @@
+pub struct Hazard {
+    hazard_type: HazardType,
+    locations: Vec<Location>,
+}
+
 pub struct Location {
     row: usize,
     col: usize,
@@ -6,10 +11,6 @@ impl Location {
     pub fn new(row: usize, col: usize) -> Self {
         Self { row, col }
     }
-}
-pub struct Hazard {
-    hazard_type: HazardType,
-    locations: Vec<Location>,
 }
 
 impl Hazard {
@@ -21,9 +22,10 @@ impl Hazard {
     }
 
     /// useful if you only have one location so you don't have to init a vec
-    pub fn new_one_loc(hazard_type: HazardType, loc: Location) -> Self {
+    pub fn new_one_loc(hazard_type: HazardType, row: usize, col: usize) -> Self {
+        let l = Location::new(row, col);
         let mut locations = Vec::new();
-        locations.push(loc);
+        locations.push(l);
         Self {
             hazard_type,
             locations,
@@ -57,8 +59,8 @@ impl HazardType {
     pub fn display_type(&self) -> &str {
         match self {
             HazardType::Syntax => "SYNTAX",
-            HazardType::ErrorT(e) => "ERROR",
-            HazardType::Warn(w) => "WARN",
+            HazardType::ErrorT(_e) => "ERROR",
+            HazardType::Warn(_w) => "WARN",
         }
     }
     pub fn display_id(&self) -> &str {
@@ -100,7 +102,7 @@ mod tests {
     fn display_test() {
         assert_eq!(
             "OUTPUT :SYNTAX: 7 1 :SYNTAX:",
-            Hazard::new_one_loc(HazardType::Syntax, Location::new(7, 1)).show_output()
+            Hazard::new_one_loc(HazardType::Syntax, 7, 1).show_output()
         )
     }
 
