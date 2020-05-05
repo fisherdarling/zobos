@@ -10,3 +10,7 @@ path = "src/bin/main.rs"
 
 [dependencies]
 petgraph = "*"
+anyhow = "*"
+lazy_static = "*"
+derive_more = "*"
+regex = "*"

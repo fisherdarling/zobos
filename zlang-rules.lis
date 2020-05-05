@@ -1,0 +1,65 @@
+
+(1)   PROGRAM -> STMTS $
+(2)   STATEMENT -> BRACESTMTS
+(3)   STATEMENT -> DECLLIST sc
+(4)   STATEMENT -> ASSIGN sc
+(5)   STATEMENT -> IF
+(6)   STATEMENT -> IFELSE
+(7)   STATEMENT -> WHILE
+(8)   STATEMENT -> EMIT sc
+(9)   STMTS -> STMTS STATEMENT
+(10)   STMTS -> lambda
+(11)   BRACESTMTS -> lbrace STMTS rbrace
+(12)   DECLTYPE -> const bool
+(13)   DECLTYPE -> bool
+(14)   DECLTYPE -> const int
+(15)   DECLTYPE -> int
+(16)   DECLTYPE -> string
+(17)   DECLTYPE -> const float
+(18)   DECLTYPE -> float
+(19)   DECLID -> id
+(20)   DECLID -> ASSIGN
+(21)   DECLIDS -> DECLID
+(22)   DECLIDS -> DECLIDS comma DECLID
+(23)   DECLLIST -> DECLTYPE DECLIDS
+(24)   ASSIGN -> id assign EXPR
+(25)   ASSIGN -> id assign ASSIGN
+(26)   IF -> if lparen BEXPR rparen STATEMENT
+(27)   IFELSE -> if lparen BEXPR rparen BRACESTMTS else STATEMENT
+(28)   WHILE -> while lparen BEXPR rparen STATEMENT
+(29)   EXPR -> BEXPR
+(30)   EXPR -> AEXPR
+(31)   BOOLS -> lt
+(32)   BOOLS -> leq
+(33)   BOOLS -> eq
+(34)   BOOLS -> geq
+(35)   BOOLS -> gt
+(36)   BEXPR -> AEXPR BOOLS AEXPR
+(37)   PLUS -> plus
+(38)   PLUS -> minus
+(39)   TIMES -> mult
+(40)   TIMES -> div
+(41)   TIMES -> mod
+(42)   AEXPR -> SUM
+(43)   SUM -> SUM PLUS PRODUCT
+(44)   SUM -> PRODUCT
+(45)   PRODUCT -> PRODUCT TIMES VALUE
+(46)   PRODUCT -> VALUE
+(47)   VALUE -> lparen AEXPR rparen
+(48)   VALUE -> lparen BEXPR rparen
+(49)   VALUE -> intval
+(50)   VALUE -> floatval
+(51)   VALUE -> stringval
+(52)   VALUE -> id
+(53)   VALUE -> UNARY
+(54)   VALUE -> CAST
+(55)   UNARY -> PLUS VALUE
+(56)   UNARY -> not VALUE
+(57)   UNARY -> compl VALUE
+(58)   CAST -> bool lparen AEXPR rparen
+(59)   CAST -> int lparen AEXPR rparen
+(60)   CAST -> float lparen AEXPR rparen
+(61)   EMIT -> emit id AEXPR AEXPR
+(62)   EMIT -> emit symtable
+
+
