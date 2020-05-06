@@ -4,6 +4,7 @@ use std::cmp::PartialEq;
 use std::fmt;
 use std::fs::File;
 use std::io::Write;
+use std::ops::Index;
 use std::path::Path;
 
 // #[derive(Debug, Clone, PartialEq)]
@@ -94,6 +95,14 @@ pub struct AstNode {
     pub data: String,
     pub span: (usize, usize),
     pub children: Vec<AstNode>,
+}
+
+impl Index<usize> for AstNode {
+    type Output = AstNode;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.children[index]
+    }
 }
 
 impl AstNode {
