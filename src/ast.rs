@@ -4,6 +4,7 @@ use std::cmp::PartialEq;
 use std::fmt;
 use std::fs::File;
 use std::io::Write;
+use std::ops::Index;
 use std::path::Path;
 
 // #[derive(Debug, Clone, PartialEq)]
@@ -96,6 +97,14 @@ pub struct AstNode {
     pub children: Vec<AstNode>,
 }
 
+impl Index<usize> for AstNode {
+    type Output = AstNode;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.children[index]
+    }
+}
+
 impl AstNode {
     pub fn new(kind: AstKind) -> Self {
         Self {
@@ -117,7 +126,6 @@ impl AstNode {
         f.write_all(&output.as_bytes())
             .expect("could not write file");
     }
-
     fn create_pet_graph(&self) -> Graph<AstKind, usize> {
         let mut graph = Graph::<_, usize>::new();
         let root = graph.add_node(self.kind);
