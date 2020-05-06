@@ -46,6 +46,14 @@ where
     }
 
     fn visit_eoi(&mut self, node: &AstNode) {}
+
+    fn visit_assign(&mut self, assign: &AstNode) {
+        todo!();
+    }
+
+    fn get_type(&mut self, node: &AstNode) -> String {
+        todo!();
+    }
 }
 
 pub struct DeclCounter(usize);
