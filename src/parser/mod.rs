@@ -11,6 +11,7 @@ use self::production::Production;
 use self::symbol::{NonTerminal, Symbol, Terminal};
 use self::token::{Token, TokenStream};
 use crate::ast::{AstKind, AstNode};
+use crate::hazards::{Hazard, HazardType};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Action {
@@ -68,7 +69,7 @@ impl ParseState {
 pub enum ParseInput {
     Tree(Symbol, AstNode),
     Token(Symbol, Token),
-    EOI,
+    EOI { span: (usize, usize) },
 }
 
 impl ParseInput {
@@ -76,7 +77,18 @@ impl ParseInput {
         match self {
             ParseInput::Tree(s, n) => n,
             ParseInput::Token(s, t) => ast_node_from_token(&t),
-            ParseInput::EOI => AstNode::new(AstKind::EOI),
+            ParseInput::EOI { span } => {
+                let mut node = AstNode::new(AstKind::EOI);
+                node.span = span;
+                node
+            }
+        }
+    }
+
+    pub fn token(&self) -> &Token {
+        match self {
+            ParseInput::Token(_, t) => t,
+            _ => panic!(format!("ParseInput is not a token: {:?}", self)),
         }
     }
 
@@ -84,7 +96,7 @@ impl ParseInput {
         match self {
             ParseInput::Tree(s, _) => s.clone(),
             ParseInput::Token(s, _) => s.clone(),
-            ParseInput::EOI => Symbol::from_parse("$").unwrap(),
+            ParseInput::EOI { .. } => Symbol::from_parse("$").unwrap(),
         }
     }
 }
@@ -93,6 +105,8 @@ impl ParseInput {
 pub struct Parser {
     pub items: Vec<(NonTerminal, Production)>,
     pub table: Vec<BTreeMap<Symbol, Action>>,
+    pub last_valid_token: Option<Token>,
+    // pub last_valid_span: (usize, usize),
     // pub tokens: TokenStream,
 }
 
@@ -105,7 +119,7 @@ impl Parser {
         Self {
             items,
             table,
-            // tokens,
+            last_valid_token: None,
         }
     }
 
@@ -120,16 +134,50 @@ impl Parser {
 
         tokens.reverse();
 
-        while let Some(token) = tokens.last().cloned().or_else(|| Some(ParseInput::EOI)) {
+        while let Some(token) = tokens.last().cloned().or_else(|| {
+            Some({
+                let span = if let Some(t) = &self.last_valid_token {
+                    t.span
+                } else {
+                    (std::usize::MAX, std::usize::MAX)
+                };
+
+                ParseInput::EOI { span }
+            })
+        }) {
             // println!("Stack: {:#?}", stack);
 
             // let t = Symbol::from_parse(&token.id).unwrap();
 
             if let Some(top_state) = stack.last().map(|s| s.state) {
-                let action = self.table[top_state].get(&token.symbol()).expect(&format!(
-                    "Syntax Error Here: State: [{}] Token: {:?}",
-                    top_state, token
-                ));
+                let action = self.table[top_state]
+                    .get(&token.symbol())
+                    .unwrap_or_else(|| {
+                        // Emit a syntax error if the entry does not exist.
+                        let mut span = match &token {
+                            ParseInput::Token(_, t) => t.span,
+                            ParseInput::Tree(_, n) => n.span,
+                            ParseInput::EOI { span } => *span,
+                        };
+
+                        // This was an artificially inserted ending token:
+                        if span.0 == std::usize::MAX {
+                            if let Some(t) = &self.last_valid_token {
+                                span = t.span;
+                            }
+                        }
+
+                        // Create and emit the hazard
+                        let hazard = Hazard::new_one_loc(HazardType::Syntax, span.0, span.1);
+                        println!("{}", hazard.show_output());
+                        std::process::exit(1)
+                    });
+
+                // That was a valid token, so if it is a "raw" token
+                // make it the last valid one.
+                if let ParseInput::Token(_, t) = &token {
+                    self.last_valid_token.replace(t.clone());
+                }
 
                 // println!(
                 //     "State: {}, Token: {:?}, Action: {:?}\n",

@@ -109,7 +109,10 @@ impl AstNode {
     // Export a graph to something that Graphvis can us
     pub fn export_graph(&self, file_path: impl AsRef<Path>) {
         let graph = self.create_pet_graph();
-        let mut f = File::create(file_path).unwrap();
+        let mut f = File::create(&file_path).expect(&format!(
+            "File not found: {:?}",
+            file_path.as_ref().display()
+        ));
         let output = format!("{}", Dot::with_config(&graph, &[Config::EdgeNoLabel]));
         f.write_all(&output.as_bytes())
             .expect("could not write file");
