@@ -155,6 +155,103 @@ impl AstNode {
         }
         graph
     }
+
+    pub fn simplify_program(program: &AstNode) -> AstNode {
+        assert_eq!(AstKind::Program, program.kind);
+
+        self.simplify_stmts(&program[0]);
+        self.simplify_eoi(&program[1]);
+    }
+
+    fn simplify_stmts(stmts: &AstNode) -> AstNode {
+        assert_eq!(AstKind::Stmts, stmts.kind);
+
+        if !stmts.children.is_empty() {
+            self.simplify_stmts(&stmts[0]);
+            self.simplify_stmt(&stmts[1]);
+        }
+    }
+
+    fn simplify_stmt(stmt: &AstNode) -> AstNode {
+        assert_eq!(AstKind::Statement, stmt.kind);
+
+        match stmt[0].kind {
+            AstKind::DecList => {
+                self.simplify_decl_list(&stmt[0]);
+            }
+            AstKind::Assign => {}
+            AstKind::Emit => {}
+            AstKind::If => {}
+            AstKind::IfElse => {}
+            AstKind::While => {}
+            AstKind::BraceStmt => {}
+            _ => panic!("Unsupported Stmt Child"),
+        }
+    }
+
+    fn simplify_decl_list(decl_list: &AstNode) -> AstNode {
+        let type = simplify_decl_type(decl_list.children[0]);
+        let mut ids = simplify_decl_ids(decl_list.children[1]); // vec<id>
+        let new_decl_list = AstNode::new(AstKind::DecList);
+        new_decl_list.children.push(type);
+        new_decl_list.children.append(ids);
+        new_decl_list
+    }
+
+    fn simplify_dec_ids(decl_ids: &AstNode) -> vec<AstNode> {
+        if decl_ids.children.len() == 1 {  // DECLIDS   -> DECLID
+            let id = simplify_dec_ids(decl_ids.children[0]);
+            let ids vec![id];
+            return ids;
+        } else {  // DECLIDS   -> DECLIDS comma DECLID
+            let mut ids = simplify_dec_ids(decl_ids.chlidren[0]);
+            let id = simplify_dec_ids(decl_ids.children[2]);
+            ids.push(id);
+            return ids;
+        }
+    }
+
+    fn simplify_dec_id(decl_id: &AstNode) -> AstNode {
+        let mut new_id = AstNode::new(AstKind::DeclId);
+        let child = decl_id.children[0];
+
+        if child.type == AstKind::Identifier {  // DECLID -> id
+            let ident = child.clone();
+            new_id.children.push(ident);
+            return new_id;
+        } else {  // DECLID -> ASSIGN
+            new_id.children.push(simplify_assign(child));
+        }
+        new_id
+    }
+
+    fn simplify_assign(assign: &AstNode) -> AstNode {\
+        let mut retval = AstNode::new(AstKind::Eq);
+        if assign.children[2].kind == AstKind::Expr {  // ASSIGN -> id assign EXPR
+            retval.append(assign.children[0].clone());
+            retval.append(simplify_expr(assign.children[2]));
+        } else {  //ASSIGN -> id assign Assign
+            retval.append(assign.children[0].clone());
+            retval.append(simplify_assign(assign.children[2]));
+        }
+        retval
+    }
+
+    fn simplify_expr(expr: AstNode) -> AstNode {
+        todo!()
+    }
+
+    fn simplify_aexpr(expr: AstNode) -> AstNode {
+        todo!()
+    }
+
+    fn simplify_bexpr(expr: AstNode) -> AstNode {
+        todo!()
+    }
+
+    fn simplify_eoi(node: &AstNode) -> AstNode {
+
+    }
 }
 
 #[derive(Debug, Clone)]
