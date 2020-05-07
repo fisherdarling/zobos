@@ -322,9 +322,12 @@ fn parse_table() -> Vec<BTreeMap<Symbol, Action>> {
 fn ast_kind_from_str(symbol: &str) -> AstKind {
     match symbol {
         "assign" | "emit" | "comma" | "compl" | "const" | "div" | "else" | "eq" | "float"
-        | "floatval" | "if" | "int" | "intval" | "lbrace" | "lparen" | "minus" | "mod" | "mult"
-        | "not" | "plus" | "rbrace" | "rparen" | "sc" | "symtable" | "while" | "lt" | "leq"
-        | "eq" | "geq" | "gt" => AstKind::Token,
+        | "if" | "lbrace" | "lparen" | "minus" | "mod" | "mult" | "not" | "plus" | "rbrace"
+        | "rparen" | "sc" | "symtable" | "while" => AstKind::Token,
+        "float" => AstKind::TypeFloat,
+        "int" => AstKind::TypeInt,
+        "intval" => AstKind::Integer,
+        "floatval" => AstKind::Float,
         "bool" => AstKind::Bools,
         "string" => AstKind::TypeString,
         "$" => AstKind::EOI,
@@ -346,7 +349,7 @@ fn ast_kind_from_str(symbol: &str) -> AstKind {
         "EXPR" => AstKind::Expr,
         "BEXPR" => AstKind::BooleanExpr,
         "AEXPR" => AstKind::ArithmeticExpr,
-        "BOOLS" => AstKind::Bools,
+        "BOOLS" | "lt" | "leq" | "eq" | "geq" | "gt" => AstKind::Bools,
         "PLUS" => AstKind::Plus,
         "TIMES" => AstKind::Times,
         "SUM" => AstKind::Sum,
