@@ -21,7 +21,8 @@ fn main() {
     let mut parser = Parser::new();
 
     let tree = parser.parse(args.token_input).unwrap();
+    let ast = tree.create_ast();
     std::fs::create_dir("test");
-    tree.export_graph(PathBuf::from("test").join(dot_out.file_name().unwrap()));
-    println!("{:#?}", tree);
+    ast.export_graph(PathBuf::from("test").join(dot_out.file_name().unwrap()));
+    //println!("{:#?}", tree);
 }
