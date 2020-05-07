@@ -66,11 +66,15 @@ pub enum AstKind {
     Value,
     Unary,
     Cast,
+    Eq,
     Program,
     String,
     Identifier,
+    Integer,
+    Float,
+    TypeInt,
     TypeString,
-    Eq,
+    TypeFloat,
 }
 
 impl fmt::Display for AstKind {
