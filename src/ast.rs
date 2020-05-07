@@ -179,7 +179,7 @@ impl AstNode {
 
     fn simplify_stmt(&self, stmt: &AstNode) -> AstNode {
         assert_eq!(AstKind::Statement, stmt.kind);
-        let mut new_node = stmt.clone(); 
+        let mut new_node = AstNode::new(AstKind::Statement); 
 
         match stmt[0].kind {
             AstKind::DecList => new_node.children.push(self.simplify_decl_list(&stmt[0])),
