@@ -240,6 +240,13 @@ impl AstNode {
     }
 
     fn simplify_decl_type (&self, atype: &AstNode) -> AstNode {
+        if atype.children.len() > 1 {
+            let mut new_node = AstNode::new(AstKind::DeclType);
+            new_node.data = atype[0].data.to_owned();
+            new_node.data.push_str(" ");
+            new_node.data.push_str(&atype[1].data.to_owned());
+            return new_node;
+        }
         atype.children[0].clone()
     }
 
