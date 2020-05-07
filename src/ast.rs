@@ -153,6 +153,7 @@ impl AstNode {
             if child.data.len() != 0 {
                 let cnode = graph.add_node(child.data.clone());
                 graph.add_edge(parent, cnode, 0);
+                graph = self.create_pet_graph_rec(graph, child, cnode);
                 continue;
             }
             let cnode = graph.add_node(child.kind.to_string());
