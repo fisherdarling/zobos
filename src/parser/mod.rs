@@ -321,10 +321,11 @@ fn parse_table() -> Vec<BTreeMap<Symbol, Action>> {
 
 fn ast_kind_from_str(symbol: &str) -> AstKind {
     match symbol {
-        "assign" | "emit" | "bool" | "comma" | "compl" | "const" | "div" | "else" | "eq"
-        | "float" | "floatval" | "if" | "int" | "intval" | "lbrace" | "lparen" | "minus"
-        | "mod" | "mult" | "not" | "plus" | "rbrace" | "rparen" | "sc" | "symtable" | "while"
-        | "lt" | "leq" | "eq" | "geq" | "gt" => AstKind::Token,
+        "assign" | "emit" | "comma" | "compl" | "const" | "div" | "else" | "eq" | "float"
+        | "floatval" | "if" | "int" | "intval" | "lbrace" | "lparen" | "minus" | "mod" | "mult"
+        | "not" | "plus" | "rbrace" | "rparen" | "sc" | "symtable" | "while" | "lt" | "leq"
+        | "eq" | "geq" | "gt" => AstKind::Token,
+        "bool" => AstKind::Bools,
         "string" => AstKind::TypeString,
         "$" => AstKind::EOI,
         "id" => AstKind::Identifier,
