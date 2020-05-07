@@ -1,3 +1,4 @@
+use crate::ast::{AstKind, AstNode};
 use crate::hazards::{ErrorId, Hazard, HazardType, Location, WarnId};
 use std::cell::Cell;
 
@@ -7,8 +8,28 @@ pub struct SymbolTable {
 }
 
 impl SymbolTable {
-    pub fn push_symbol(&mut self, scope: usize, ty: String, ident: String, span: (usize, usize)) {
-        let symbol = Symbol::new(scope, ty, ident, span);
+    pub fn push_symbol(
+        &mut self,
+        scope: usize,
+        ty: String,
+        ident: String,
+        span: (usize, usize),
+        const_: bool,
+    ) {
+        let symbol = Symbol::new(scope, ty, ident, span, const_);
+        self.symbols.push(symbol);
+    }
+
+    pub fn push_symbol_init(
+        &mut self,
+        scope: usize,
+        ty: String,
+        ident: String,
+        span: (usize, usize),
+        const_: bool,
+    ) {
+        let symbol = Symbol::new(scope, ty, ident, span, const_);
+        symbol.initialized.set(true);
         self.symbols.push(symbol);
     }
 
@@ -37,6 +58,7 @@ impl SymbolTable {
 #[derive(Debug, Default)]
 pub struct Symbol {
     pub scope: usize,
+    pub const_: bool,
     pub ty: String, // ty = type. Should probably not be a string, but don't have types yet
     pub ident: String, // identifier
     pub span: (usize, usize),
@@ -45,9 +67,16 @@ pub struct Symbol {
 }
 
 impl Symbol {
-    pub fn new(scope: usize, ty: String, ident: String, span: (usize, usize)) -> Self {
+    pub fn new(
+        scope: usize,
+        ty: String,
+        ident: String,
+        span: (usize, usize),
+        const_: bool,
+    ) -> Self {
         Self {
             scope,
+            const_,
             ty,
             ident,
             span,
@@ -128,6 +157,83 @@ impl SymbolVisitor {
                 println!("{}", hazard.show_output());
             })
     }
+
+    pub fn program(&mut self, program: &AstNode) {}
+
+    fn stmt(&mut self, stmt: &AstNode) {
+        assert_eq!(AstKind::Statement, stmt.kind);
+
+        match stmt[0].kind {
+            AstKind::DecList => {
+                self.decl_list(&stmt[0]);
+            }
+            AstKind::Assign => {}
+            AstKind::Emit => {}
+            AstKind::If => {}
+            AstKind::IfElse => {}
+            AstKind::While => {}
+            AstKind::BraceStmt => {}
+            _ => panic!("Unsupported Stmt Child"),
+        }
+    }
+
+    fn decl_list(&mut self, stmt: &AstNode) {
+        // At this point the lhs child is a type and
+        // some identifier
+        // The rhs is either an id or ASSIGN
+        // Get the type of the LHS, check for CONV with lhs == rhs
+
+        let lhs = &stmt.children[0];
+
+        // We have nice flattened tree:
+        let comma_list = &stmt.children[1].children;
+
+        let ty = lhs;
+
+        for comma in comma_list {
+            self.handle_comma(ty, comma);
+        }
+    }
+
+    fn handle_comma(&mut self, ty: &AstNode, comma: &AstNode) {
+        // Either an identifier or an assign list
+        let child = &comma[0];
+
+        let (is_const, string_ty) = get_decl_type(ty);
+
+        // There is a single identifier
+        match child.children.as_slice() {
+            [ident] => self.table.push_symbol(
+                self.scope,
+                string_ty,
+                ident.data.clone(),
+                ident.span,
+                is_const,
+            ),
+            [ids @ .., expr] => {
+                for ident in ids {
+                    self.table.push_symbol_init(
+                        self.scope,
+                        string_ty.clone(),
+                        ident.data.clone(),
+                        ident.span,
+                        is_const,
+                    );
+
+                    // TODO: Determine expr type and check it
+                    // with string_ty
+                }
+            }
+            [] => panic!("There must be at least one child"),
+        }
+    }
+}
+
+pub fn get_decl_type(ty: &AstNode) -> (bool, String) {
+    let is_const = ty.children.len() > 1;
+    let string_ty = ty[1].data.clone();
+
+    (is_const, string_ty)
 }
 
 // #[cfg(test)]
