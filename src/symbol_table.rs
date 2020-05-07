@@ -5,6 +5,7 @@ use std::cell::Cell;
 #[derive(Debug, Default)]
 pub struct SymbolTable {
     pub symbols: Vec<Symbol>,
+    pub valid_scopes: Vec<usize>, // which scopes can we currently 'see'
 }
 
 impl SymbolTable {
@@ -16,6 +17,7 @@ impl SymbolTable {
         span: (usize, usize),
         const_: bool,
     ) {
+        self.check_for_redeclare(&ident, span); // Should this go here as well?
         let symbol = Symbol::new(scope, ty, ident, span, const_);
         self.symbols.push(symbol);
     }
@@ -28,13 +30,45 @@ impl SymbolTable {
         span: (usize, usize),
         const_: bool,
     ) {
+        self.check_for_redeclare(&ident, span);
         let symbol = Symbol::new(scope, ty, ident, span, const_);
         symbol.initialized.set(true);
         self.symbols.push(symbol);
     }
 
+    pub fn check_for_redeclare(&self, ident: &str, span: (usize, usize)) {
+        let current_valid_symbols = self.symbols_in_valid_scope();
+        let is_redeclare = current_valid_symbols.iter().any(|s| s.ident == ident);
+        if is_redeclare {
+            let redeclare_warn =
+                Hazard::new_one_loc(HazardType::Warn(WarnId::RedeclareVar), span.0, span.1);
+            println!("{}", redeclare_warn.show_output());
+        }
+    }
+
+    /// tells you if a ident is in valid scope and has been initialized. This
+    /// should be run before we use a variable in an expr
+    pub fn has_been_initialized(&self, ident: String, span: (usize, usize)) {
+        if self
+            .symbols_in_valid_scope()
+            .iter()
+            .filter(|s| s.initialized.get())
+            .any(|s| s.ident == ident)
+        {
+            let h = Hazard::new_one_loc(HazardType::Warn(WarnId::Uninit), span.0, span.1);
+            println!("{}", h.show_output());
+        }
+    }
+
+    pub fn symbols_in_valid_scope(&self) -> Vec<&Symbol> {
+        self.symbols
+            .iter()
+            .filter(|s| self.valid_scopes.contains(&s.scope))
+            .collect()
+    }
+
     pub fn symbols_in_scope(&self, scope: usize) -> Vec<&Symbol> {
-        self.symbols.iter().filter(|s| s.scope == scope).collect()
+        self.symbols.iter().filter(|s| s.scope == scope).collect() // FISHER should we change this to 'in or below scope and make it a <?
     }
 
     pub fn symbols_in_scope_mut(&mut self, scope: usize) -> Vec<&mut Symbol> {
