@@ -84,6 +84,7 @@ impl fmt::Display for AstKind {
             // AstKind::Int(i) => write!(f, "{}", i),
             // AstKind::Bool(b) => write!(f, "{}", b),
             AstKind::Eq => write!(f, "="),
+            AstKind::Plus => write!(f, "+"),
             // AstKind::Leq => write!(f, "<="),
             // AstKind::Geq => write!(f, ">="),
             // AstKind::Gt => write!(f, ">"),
@@ -348,7 +349,7 @@ impl AstNode {
     fn simplify_emit(&self, emit: &AstNode) -> AstNode {
         let mut new_node = AstNode::new(AstKind::Emit);
         if emit.children.len() == 4 {  // EMIT -> emit id AEXPR AEXPR
-            new_node.children.push(AstNode::new(AstKind::Identifier));
+            new_node.children.push(emit[1].clone());
             new_node.children.push(self.simplify_aexpr(&emit.children[2]));
             new_node.children.push(self.simplify_aexpr(&emit.children[3]));
         } else {  // EMIT -> emit symtable
