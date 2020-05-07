@@ -79,7 +79,7 @@ impl fmt::Display for AstKind {
             // AstKind::Float(fl) => write!(f, "{}", fl),
             // AstKind::Int(i) => write!(f, "{}", i),
             // AstKind::Bool(b) => write!(f, "{}", b),
-            // AstKind::Eq => write!(f, "=="),
+            AstKind::Eq => write!(f, "="),
             // AstKind::Leq => write!(f, "<="),
             // AstKind::Geq => write!(f, ">="),
             // AstKind::Gt => write!(f, ">"),
@@ -144,11 +144,12 @@ impl AstNode {
         node: &AstNode,
         parent: petgraph::graph::NodeIndex,
     ) -> Graph<String, usize> {
-        if node.data.len() != 0 {
-            let cnode = graph.add_node(node.data.clone());
-            graph.add_edge(parent, cnode, 0);
-        }
         for child in node.children.iter() {
+            if child.data.len() != 0 {
+                let cnode = graph.add_node(child.data.clone());
+                graph.add_edge(parent, cnode, 0);
+                continue;
+            }
             let cnode = graph.add_node(child.kind.to_string());
             graph.add_edge(parent, cnode, 0);
 
@@ -328,10 +329,16 @@ impl AstNode {
     }
 
     fn simplify_bexpr(&self, expr: &AstNode) -> AstNode {
-        let mut bools:AstNode = expr.children[1].clone();
+        let mut bools = self.simplify_bool(&expr[1]);
+        println!("{}", bools.kind);
         bools.children.push(self.simplify_aexpr(&expr.children[0]));
         bools.children.push(self.simplify_aexpr(&expr.children[2]));
+        println!("{}", bools.children.len());
         bools
+    }
+
+    fn simplify_bool(&self, abool: &AstNode) -> AstNode {
+        abool[0].clone()
     }
 
     fn simplify_emit(&self, emit: &AstNode) -> AstNode {
