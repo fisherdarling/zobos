@@ -105,7 +105,7 @@ impl SymbolTable {
             .append(true)
             .create(true)
             .open(path)
-            .unwrap();
+            .unwrap_or_else(|e| std::process::exit(1));
 
         file.write_all(out.as_bytes()).unwrap();
     }

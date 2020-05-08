@@ -125,7 +125,7 @@ impl AstNode {
     // Export a graph to something that Graphvis can us
     pub fn export_graph(&self, file_path: impl AsRef<Path>) {
         let graph = self.create_pet_graph();
-        let mut f = File::create(file_path).unwrap();
+        let mut f = File::create(file_path).unwrap_or_else(|e| std::process::exit(1));
         let output = format!("{}", Dot::with_config(&graph, &[Config::EdgeNoLabel]));
         f.write_all(&output.as_bytes())
             .expect("could not write file");
@@ -460,7 +460,7 @@ pub struct AstGraph {
 impl AstGraph {
     //This writes out a .dot file to a path
     pub fn export_graph(&self, file_path: impl AsRef<Path>) {
-        let mut f = File::create(file_path).unwrap();
+        let mut f = File::create(file_path).unwrap_or_else(|e| std::process::exit(1));
         let output = format!("{}", Dot::with_config(&self.graph, &[Config::EdgeNoLabel]));
         f.write_all(&output.as_bytes())
             .expect("could not write file");
