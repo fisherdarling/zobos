@@ -1,0 +1,159 @@
+digraph {
+    0 [label="Program"]
+    1 [label="Statement"]
+    2 [label="DecList"]
+    3 [label="const int"]
+    4 [label="DeclId"]
+    5 [label="="]
+    6 [label="ONE"]
+    7 [label="1"]
+    8 [label="Statement"]
+    9 [label="DecList"]
+    10 [label="int"]
+    11 [label="DeclId"]
+    12 [label="="]
+    13 [label="prev"]
+    14 [label="current"]
+    15 [label="ONE"]
+    16 [label="Statement"]
+    17 [label="DecList"]
+    18 [label="string"]
+    19 [label="DeclId"]
+    20 [label="="]
+    21 [label="begin"]
+    22 [label="\"the Beguine\""]
+    23 [label="Statement"]
+    24 [label="Emit"]
+    25 [label="begin"]
+    26 [label="4"]
+    27 [label="+"]
+    28 [label="10"]
+    29 [label="-"]
+    30 [label="3"]
+    31 [label="Statement"]
+    32 [label="While"]
+    33 [label="<"]
+    34 [label="current"]
+    35 [label="10000"]
+    36 [label="Statement"]
+    37 [label="BraceStmt"]
+    38 [label="Statement"]
+    39 [label="Emit"]
+    40 [label="Symtable"]
+    41 [label="Statement"]
+    42 [label="DecList"]
+    43 [label="int"]
+    44 [label="DeclId"]
+    45 [label="="]
+    46 [label="tmp"]
+    47 [label="current"]
+    48 [label="Statement"]
+    49 [label="="]
+    50 [label="current"]
+    51 [label="+"]
+    52 [label="current"]
+    53 [label="prev"]
+    54 [label="Statement"]
+    55 [label="="]
+    56 [label="prev"]
+    57 [label="tmp"]
+    58 [label="Statement"]
+    59 [label="Emit"]
+    60 [label="Symtable"]
+    61 [label="Statement"]
+    62 [label="DecList"]
+    63 [label="string"]
+    64 [label="DeclId"]
+    65 [label="="]
+    66 [label="end"]
+    67 [label="\"inif\""]
+    68 [label="Statement"]
+    69 [label="Emit"]
+    70 [label="end"]
+    71 [label="3"]
+    72 [label="1"]
+    73 [label="Statement"]
+    74 [label="Emit"]
+    75 [label="end"]
+    76 [label="0"]
+    77 [label="3"]
+    78 [label="EOI"]
+    0 -> 1
+    1 -> 2
+    2 -> 3
+    2 -> 4
+    4 -> 5
+    5 -> 6
+    5 -> 7
+    0 -> 8
+    8 -> 9
+    9 -> 10
+    9 -> 11
+    11 -> 12
+    12 -> 13
+    12 -> 14
+    12 -> 15
+    0 -> 16
+    16 -> 17
+    17 -> 18
+    17 -> 19
+    19 -> 20
+    20 -> 21
+    20 -> 22
+    0 -> 23
+    23 -> 24
+    24 -> 25
+    24 -> 26
+    24 -> 27
+    27 -> 28
+    27 -> 29
+    29 -> 30
+    0 -> 31
+    31 -> 32
+    32 -> 33
+    33 -> 34
+    33 -> 35
+    32 -> 36
+    36 -> 37
+    37 -> 38
+    38 -> 39
+    39 -> 40
+    37 -> 41
+    41 -> 42
+    42 -> 43
+    42 -> 44
+    44 -> 45
+    45 -> 46
+    45 -> 47
+    37 -> 48
+    48 -> 49
+    49 -> 50
+    49 -> 51
+    51 -> 52
+    51 -> 53
+    37 -> 54
+    54 -> 55
+    55 -> 56
+    55 -> 57
+    37 -> 58
+    58 -> 59
+    59 -> 60
+    0 -> 61
+    61 -> 62
+    62 -> 63
+    62 -> 64
+    64 -> 65
+    65 -> 66
+    65 -> 67
+    0 -> 68
+    68 -> 69
+    69 -> 70
+    69 -> 71
+    69 -> 72
+    0 -> 73
+    73 -> 74
+    74 -> 75
+    74 -> 76
+    74 -> 77
+    0 -> 78
+}

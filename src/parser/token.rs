@@ -22,7 +22,7 @@ impl Debug for TokenStream {
 
 impl TokenStream {
     pub fn from_file(path: impl AsRef<Path>) -> Self {
-        let file = File::open(path).expect("File not found");
+        let file = File::open(path).unwrap_or_else(|e| std::process::exit(1));
         let reader = BufReader::new(file);
         let lines = reader.lines().flatten().filter(|l| !l.is_empty());
         let lines = Box::new(lines);

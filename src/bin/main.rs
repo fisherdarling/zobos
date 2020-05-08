@@ -20,7 +20,9 @@ fn main() {
 
     let mut parser = Parser::new();
 
-    let tree = parser.parse(args.token_input).unwrap();
+    let tree = parser
+        .parse(args.token_input)
+        .unwrap_or_else(|e| std::process::exit(1));
     let ast = tree.create_ast();
     ast.export_graph(&args.ast_output);
 
