@@ -10,4 +10,12 @@ assign = 0 9
 id e 0 10
 assign = 0 11
 stringval hello 0 12
-sc ; 0 13
+comma , 0 13
+id f 0 14
+assign = 0 15
+id g 0 16
+assign = 0 17
+id h 0 18
+assign = 0 19
+intval 21 0 20
+sc ; 0 21
