@@ -17,7 +17,7 @@ impl SymbolTable {
         span: (usize, usize),
         const_: bool,
     ) {
-        self.check_for_redeclare(&ident, span); // Should this go here as well?
+        self.check_for_redeclare(&ident, span);
         let symbol = Symbol::new(scope, ty, ident, span, const_);
         self.symbols.push(symbol);
     }
@@ -194,6 +194,130 @@ impl SymbolVisitor {
 
     pub fn program(&mut self, program: &AstNode) {}
 
+    /// expected_type is what the expr should evaluate too. Returns a type
+    pub fn get_expr_type(&mut self, expr: &AstNode) -> Result<String, Hazard> {
+        // a < (b + c)
+
+        if expr.children.is_empty() {
+            match expr.kind {
+                AstKind::Integer => return Ok("int".to_string()),
+                AstKind::Float => return Ok("float".to_string()),
+                AstKind::String => return Ok("string".to_string()),
+                _ => panic!("invalid kind for bottom node in expr tree"),
+            }
+        }
+
+        if expr.children.len() == 1 {
+            match expr.data.as_str() {
+                "+" | "-" => {
+                    let child_kind = &self.get_expr_type(&expr[0])?;
+                    if is_numeric(child_kind) {
+                        return Ok(child_kind.clone());
+                    } else {
+                        return Err(Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Expr),
+                            expr.span.0,
+                            expr.span.1,
+                        ));
+                    }
+                }
+                "~" => {
+                    // bitwise complement
+                    let child_kind = &self.get_expr_type(&expr[0])?;
+                    if child_kind == "int" {
+                        return Ok("bool".to_string());
+                    } else {
+                        return Err(Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Expr),
+                            expr.span.0,
+                            expr.span.1,
+                        ));
+                    }
+                }
+                "!" => {
+                    let child_kind = &self.get_expr_type(&expr[0])?;
+                    if child_kind == "bool" {
+                        return Ok("bool".to_string());
+                    } else {
+                        return Err(Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Expr),
+                            expr.span.0,
+                            expr.span.1,
+                        ));
+                    }
+                }
+                _ => panic!("Invalid string of expr_data when dealing with one child in expr"),
+            }
+        }
+
+        // TODO if Expr has no children then we return what?
+        let lhs = self.get_expr_type(&expr[0])?;
+        let rhs = self.get_expr_type(&expr[1])?;
+        // assert_eq!(AstKind::Expr, expr.kind);
+        let op = expr.data.as_str();
+        match expr.kind {
+            AstKind::Plus => {
+                if lhs == rhs && (lhs == "float" || lhs == "int") {
+                    Ok(lhs)
+                } else if (lhs == "float" || lhs == "int") && (rhs == "float" || rhs == "int") {
+                    Ok("float".to_string())
+                } else {
+                    Err(Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Expr),
+                        expr.span.0,
+                        expr.span.1,
+                    ))
+                }
+            }
+            AstKind::Bools => {
+                let op = expr.data.as_str();
+                if is_numeric(&lhs) && is_numeric(&rhs) {
+                    Ok("bool".to_string())
+                } else if lhs == rhs && (op == "==" || op == "!=") {
+                    Ok("bool".to_string())
+                } else {
+                    Err(Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Expr),
+                        expr.span.0,
+                        expr.span.1,
+                    ))
+                }
+            }
+            AstKind::Times => {
+                if op == "mod" {
+                    if lhs == rhs && lhs == "int" {
+                        Ok(lhs)
+                    } else {
+                        Err(Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Expr),
+                            expr.span.0,
+                            expr.span.1,
+                        ))
+                    }
+                } else if lhs == rhs && (lhs == "float" || lhs == "int") {
+                    Ok(lhs)
+                } else if (lhs == "float" || lhs == "int") && (rhs == "float" || rhs == "int") {
+                    Ok("float".to_string())
+                } else {
+                    Err(Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Expr),
+                        expr.span.0,
+                        expr.span.1,
+                    ))
+                }
+            }
+            _ => panic!("Bad astkind where there should be expr"),
+        }
+    }
+
+    // fn compare_result(lhs: &str, rhs: &str) -> String {
+
+    //     if lhs == "float" && rhs == "int" {
+    //         return "float".to_string()
+    //     }
+
+    // }
+
     fn stmt(&mut self, stmt: &AstNode) {
         assert_eq!(AstKind::Statement, stmt.kind);
 
@@ -261,6 +385,10 @@ impl SymbolVisitor {
             [] => panic!("There must be at least one child"),
         }
     }
+}
+
+pub fn is_numeric(ty: &str) -> bool {
+    ty == "float" || ty == "int"
 }
 
 pub fn get_decl_type(ty: &AstNode) -> (bool, String) {
