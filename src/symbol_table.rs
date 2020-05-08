@@ -763,6 +763,7 @@ pub fn is_valid_conversion(var_type: &str, val_type: &str) -> bool {
         },
         "int" => match var_type {
             // Check table with keith
+            "bool" => false,
             "string" => false,
             _ => true,
         },
