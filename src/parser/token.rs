@@ -40,12 +40,12 @@ impl TokenStream {
         let span = (
             split
                 .next()
-                .unwrap_or_else(|| std::process::exit(1))
+                .unwrap_or_else(|| std::process::exit(42))
                 .parse()
                 .unwrap(),
             split
                 .next()
-                .unwrap_or_else(|| std::process::exit(1))
+                .unwrap_or_else(|| std::process::exit(42))
                 .parse()
                 .unwrap(),
         );
