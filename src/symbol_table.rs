@@ -417,8 +417,12 @@ impl SymbolVisitor {
             AstKind::Emit => {
                 self.handle_emit(&stmt[0]);
             }
-            AstKind::If => {}
-            AstKind::IfElse => {}
+            AstKind::If => {
+                self.if_stmt_stmt(&stmt[0]);
+            }
+            AstKind::IfElse => {
+                self.if_else_stmt(&stmt[0]);
+            }
             AstKind::While => {
                 self.while_stmt(&stmt[0]);
             }
@@ -440,9 +444,84 @@ impl SymbolVisitor {
 
     fn assign_stmt(&mut self, assign: &AstNode) {}
 
-    fn if_stmt_stmt(&mut self, if_: &AstNode) {}
+    fn if_stmt_stmt(&mut self, if_: &AstNode) {
+        let predicate = &if_[0];
 
-    fn if_else_stmt(&mut self, if_else: &AstNode) {}
+        let predicate_type = self.get_expr_type(predicate);
+
+        if let Err(ref e) = predicate_type {}
+
+        match predicate_type {
+            Err(e) => {
+                self.errored = true;
+                e.iter().for_each(|h| println!("{}", h.show_output()));
+            }
+            Ok(p) => {
+                if !p.contains("bool") {
+                    let h = Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Conversion),
+                        predicate.span.0,
+                        predicate.span.1,
+                    );
+
+                    println!("{}", h.show_output());
+                    self.errored = true;
+                }
+            }
+        }
+
+        if if_[1][0].kind == AstKind::BraceStmt {
+            let brace_stmt = &if_[1][0];
+            self.brace_stmt(brace_stmt);
+        } else {
+            let stmt = &if_[1];
+            self.stmt(stmt);
+        }
+    }
+
+    fn if_else_stmt(&mut self, if_else: &AstNode) {
+        assert_eq!(if_else.children.len(), 3); // first is predicate, second is true, third is false
+        let predicate = &if_else[0];
+
+        let predicate_type = self.get_expr_type(predicate);
+
+        if let Err(ref e) = predicate_type {}
+
+        match predicate_type {
+            Err(e) => {
+                self.errored = true;
+                e.iter().for_each(|h| println!("{}", h.show_output()));
+            }
+            Ok(p) => {
+                if !p.contains("bool") {
+                    let h = Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Conversion),
+                        predicate.span.0,
+                        predicate.span.1,
+                    );
+
+                    println!("{}", h.show_output());
+                    self.errored = true;
+                }
+            }
+        }
+
+        if if_else[1].kind == AstKind::BraceStmt {
+            let brace_stmt = &if_else[1];
+            self.brace_stmt(brace_stmt);
+        } else {
+            let stmt = &if_else[1];
+            self.stmt(stmt);
+        }
+        // probably have something like above but for now I am going to assume #2 is something like
+        // Statement -> BraceStmt -> Statement
+        let false_brace = &if_else[2][0];
+        self.brace_stmt(&false_brace);
+        // let true_brace_stmt = &if_else[1][0];
+        // let false_brace_stmt = &if_else[2][0];
+
+        // self.brace_stmt(false_brace_stmt);
+    }
 
     fn while_stmt(&mut self, while_: &AstNode) {
         // println!("While: {}", while_.kind.to_string());
