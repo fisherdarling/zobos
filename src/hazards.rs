@@ -1,12 +1,15 @@
+#[derive(Debug, Clone)]
 pub struct Hazard {
     hazard_type: HazardType,
     locations: Vec<Location>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Location {
     row: usize,
     col: usize,
 }
+
 impl Location {
     pub fn new(row: usize, col: usize) -> Self {
         Self { row, col }
@@ -50,6 +53,7 @@ impl Hazard {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum HazardType {
     Syntax,          // String should be token
     ErrorT(ErrorId), // `Error` and `Err` where causing match problem
@@ -81,11 +85,13 @@ impl HazardType {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum ErrorId {
     NoVar,      // undeclared var
     Conversion, // value conversion error
     Expr,       // Expression tree operand error
 }
+#[derive(Debug, Clone)]
 pub enum WarnId {
     RedeclareVar, // Attempting to re-declare a variable
     Unused,       // The variable is not used in an expression or assignment within it's scope

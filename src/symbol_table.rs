@@ -43,7 +43,7 @@ impl SymbolTable {
 
     /// will emit an error if is redeclare, and not add it to the scope
     pub fn check_for_redeclare(&self, ident: &str, scope: usize, span: (usize, usize)) -> bool {
-        let current_valid_symbols = self.symbols_in_valid_scope();
+        let current_valid_symbols = self.symbols_in_valid_scope(scope);
         let is_redeclare = current_valid_symbols
             .iter()
             .any(|s| s.ident == ident && s.scope == scope);
@@ -57,9 +57,9 @@ impl SymbolTable {
 
     /// tells you if a ident is in valid scope and has been initialized. This
     /// should be run before we use a variable in an expr
-    pub fn has_been_initialized(&self, ident: String, span: (usize, usize)) {
+    pub fn has_been_initialized(&self, ident: String, current_scope: usize, span: (usize, usize)) {
         if self
-            .symbols_in_valid_scope()
+            .symbols_in_valid_scope(current_scope)
             .iter()
             .filter(|s| s.initialized.get())
             .any(|s| s.ident == ident)
@@ -69,10 +69,10 @@ impl SymbolTable {
         }
     }
 
-    pub fn symbols_in_valid_scope(&self) -> Vec<&Symbol> {
+    pub fn symbols_in_valid_scope(&self, current_scope: usize) -> Vec<&Symbol> {
         self.symbols
             .iter()
-            .filter(|s| self.valid_scopes.contains(&s.scope))
+            .filter(|s| s.scope <= current_scope)
             .collect()
     }
 
@@ -212,6 +212,7 @@ impl SymbolVisitor {
     }
 
     pub fn program(&mut self, program: &AstNode) {
+        // println!("Program: {}", program.kind.to_string());
         for c in &program.children {
             if c.kind == AstKind::Statement {
                 self.stmt(c);
@@ -221,6 +222,12 @@ impl SymbolVisitor {
 
     /// expected_type is what the expr should evaluate too. Returns a type
     pub fn get_expr_type(&mut self, expr: &AstNode) -> Result<String, Vec<Hazard>> {
+        // println!("Expr: {}", expr.kind.to_string());
+        // println!(
+        //     "Valid Scope: {:?}\n",
+        //     self.table.symbols_in_valid_scope(self.scope)
+        // );
+
         // a < (b + c)
 
         if expr.children.is_empty() {
@@ -231,7 +238,7 @@ impl SymbolVisitor {
                 AstKind::Identifier => {
                     if let Some(ident) = self
                         .table
-                        .symbols_in_valid_scope()
+                        .symbols_in_valid_scope(self.scope)
                         .iter()
                         .find(|s| s.ident == expr.data)
                     {
@@ -396,13 +403,15 @@ impl SymbolVisitor {
     fn handle_emit(&mut self, emit: &AstNode) {}
 
     fn stmt(&mut self, stmt: &AstNode) {
+        // println!("Stmt: {}", stmt.kind.to_string());
+
         assert_eq!(AstKind::Statement, stmt.kind);
 
         match stmt[0].kind {
             AstKind::DecList => {
                 self.decl_list(&stmt[0]);
             }
-            AstKind::Assign => {
+            AstKind::Assign | AstKind::Eq => {
                 self.assign_stmt(&stmt[0]);
             }
             AstKind::Emit => {
@@ -410,9 +419,15 @@ impl SymbolVisitor {
             }
             AstKind::If => {}
             AstKind::IfElse => {}
-            AstKind::While => {}
+            AstKind::While => {
+                self.while_stmt(&stmt[0]);
+            }
             AstKind::BraceStmt => {}
-            _ => panic!("Unsupported Stmt Child"),
+            s => panic!(format!(
+                "Unsupported Stmt Child: {}: {:?}",
+                s.to_string(),
+                stmt[0]
+            )),
         }
     }
 
@@ -429,9 +444,43 @@ impl SymbolVisitor {
 
     fn if_else_stmt(&mut self, if_else: &AstNode) {}
 
-    fn while_stmt(&mut self, while_: &AstNode) {}
+    fn while_stmt(&mut self, while_: &AstNode) {
+        // println!("While: {}", while_.kind.to_string());
+
+        // println!("{:#?}", self.table);
+
+        let predicate = &while_[0];
+
+        let predicate_type = self.get_expr_type(predicate);
+
+        if let Err(ref e) = predicate_type {}
+
+        match predicate_type {
+            Err(e) => {
+                self.errored = true;
+                e.iter().for_each(|h| println!("{}", h.show_output()));
+            }
+            Ok(p) => {
+                if !p.contains("bool") {
+                    let h = Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Conversion),
+                        predicate.span.0,
+                        predicate.span.1,
+                    );
+
+                    println!("{}", h.show_output());
+                    self.errored = true;
+                }
+            }
+        }
+
+        let brace_stmt = &while_[1][0];
+        
+        self.brace_stmt(brace_stmt);
+    }
 
     fn decl_list(&mut self, stmt: &AstNode) {
+        // println!("DeclList: {}", stmt.kind.to_string());
         // At this point the lhs child is a type and
         // some identifier
         // The rhs is either an id or ASSIGN
@@ -452,7 +501,8 @@ impl SymbolVisitor {
     }
 
     fn handle_comma(&mut self, ty: &AstNode, comma: &AstNode) -> Result<(), Vec<Hazard>> {
-        println!("{:?}", comma);
+        // println!("DeclId: {}", comma.kind.to_string());
+        // println!("{:?}", comma);
         // Either an identifier or an assign list
         // let child = &comma[0];
 
@@ -478,8 +528,9 @@ impl SymbolVisitor {
                         );
                         return Err(vec![h]);
                     }
+
                     self.table.push_symbol_init(
-                        self.scope,
+                        self.scfn assign_stmt(&mut self, assign: &AstNode) {}ope,
                         string_ty.clone(),
                         ident.data.clone(),
                         ident.span,
@@ -492,6 +543,9 @@ impl SymbolVisitor {
             }
             [] => panic!("There must be at least one child"),
         }
+
+        // println!("After Comma: {:?}", self.table);
+
         Ok(())
     }
 }
