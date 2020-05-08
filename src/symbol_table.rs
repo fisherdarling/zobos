@@ -715,6 +715,7 @@ impl SymbolVisitor {
                             comma.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
                             comma.span.1,
                         );
+                        self.errored = true;
                         return Err(vec![h]);
                     }
 
