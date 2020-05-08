@@ -17,9 +17,10 @@ impl SymbolTable {
         span: (usize, usize),
         const_: bool,
     ) {
-        self.check_for_redeclare(&ident, span);
-        let symbol = Symbol::new(scope, ty, ident, span, const_);
-        self.symbols.push(symbol);
+        if !self.check_for_redeclare(&ident, scope, span) {
+            let symbol = Symbol::new(scope, ty, ident, span, const_);
+            self.symbols.push(symbol);
+        }
     }
 
     pub fn push_symbol_init(
@@ -30,20 +31,25 @@ impl SymbolTable {
         span: (usize, usize),
         const_: bool,
     ) {
-        self.check_for_redeclare(&ident, span);
-        let symbol = Symbol::new(scope, ty, ident, span, const_);
-        symbol.initialized.set(true);
-        self.symbols.push(symbol);
+        if !self.check_for_redeclare(&ident, scope, span) {
+            let symbol = Symbol::new(scope, ty, ident, span, const_);
+            symbol.initialized.set(true);
+            self.symbols.push(symbol);
+        }
     }
 
-    pub fn check_for_redeclare(&self, ident: &str, span: (usize, usize)) {
+    /// will emit an error if is redeclare, and not add it to the scope
+    pub fn check_for_redeclare(&self, ident: &str, scope: usize, span: (usize, usize)) -> bool {
         let current_valid_symbols = self.symbols_in_valid_scope();
-        let is_redeclare = current_valid_symbols.iter().any(|s| s.ident == ident);
+        let is_redeclare = current_valid_symbols
+            .iter()
+            .any(|s| s.ident == ident && s.scope == scope);
         if is_redeclare {
             let redeclare_warn =
                 Hazard::new_one_loc(HazardType::Warn(WarnId::RedeclareVar), span.0, span.1);
             println!("{}", redeclare_warn.show_output());
         }
+        is_redeclare
     }
 
     /// tells you if a ident is in valid scope and has been initialized. This
