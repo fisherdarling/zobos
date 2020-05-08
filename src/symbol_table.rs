@@ -1,6 +1,9 @@
 use crate::ast::{AstKind, AstNode};
 use crate::hazards::{ErrorId, Hazard, HazardType, Location, WarnId};
 use std::cell::Cell;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::PathBuf;
 
 #[derive(Debug, Default)]
 pub struct SymbolTable {
@@ -84,6 +87,12 @@ impl SymbolTable {
             .collect()
     }
 
+    pub fn write_to_file(&self, path: &PathBuf) {
+        let out = self.output();
+        let mut file = File::create(path).unwrap();
+        file.write_all(out.as_bytes()).unwrap();
+    }
+
     pub fn output(&self) -> String {
         let mut out = String::new();
 
@@ -145,6 +154,10 @@ pub struct SymbolVisitor {
 impl SymbolVisitor {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn write_table_to_file(&self, path: &PathBuf) {
+        self.table.write_to_file(path);
     }
 
     pub fn current_symbols(&self) -> Vec<&Symbol> {
@@ -404,7 +417,11 @@ impl SymbolVisitor {
     }
 
     // Pushing and popping scopes and stuff:
-    fn brace_stmt(&mut self, brace: &AstNode) {}
+    fn brace_stmt(&mut self, brace: &AstNode) {
+        for child in &brace.children {
+            self.stmt(child); // call stmt on all of the brace child children
+        }
+    }
 
     fn assign_stmt(&mut self, assign: &AstNode) {}
 

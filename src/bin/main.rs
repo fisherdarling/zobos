@@ -29,5 +29,11 @@ fn main() {
     sv.program(&ast);
 
     sv.report_unused();
+
+    // TODO do check to see if 'emit symtable' is anywhere in table
+    sv.write_table_to_file(&args.table_output);
+
+    // output symbol table at end
+
     //println!("{:#?}", tree);
 }
