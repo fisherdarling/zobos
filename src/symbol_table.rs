@@ -17,7 +17,7 @@ impl SymbolTable {
         span: (usize, usize),
         const_: bool,
     ) {
-        self.check_for_redeclare(&ident, span); // Should this go here as well?
+        self.check_for_redeclare(&ident, span);
         let symbol = Symbol::new(scope, ty, ident, span, const_);
         self.symbols.push(symbol);
     }
@@ -192,7 +192,151 @@ impl SymbolVisitor {
             })
     }
 
-    pub fn program(&mut self, program: &AstNode) {}
+    pub fn program(&mut self, program: &AstNode) {
+        for c in &program.children {
+            if c.kind == AstKind::Statement {
+                self.stmt(c);
+            }
+        }
+    }
+
+    /// expected_type is what the expr should evaluate too. Returns a type
+    pub fn get_expr_type(&mut self, expr: &AstNode) -> Result<String, Vec<Hazard>> {
+        // a < (b + c)
+
+        if expr.children.is_empty() {
+            match expr.kind {
+                AstKind::Integer => return Ok("int".to_string()),
+                AstKind::Float => return Ok("float".to_string()),
+                AstKind::String => return Ok("string".to_string()),
+                _ => panic!("invalid kind for bottom node in expr tree"),
+            }
+        }
+
+        if expr.children.len() == 1 {
+            match expr.data.as_str() {
+                "+" | "-" => {
+                    let child_kind = &self.get_expr_type(&expr[0])?;
+                    if is_numeric(child_kind) {
+                        return Ok(child_kind.clone());
+                    } else {
+                        self.errored = true;
+                        return Err(vec![Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Expr),
+                            expr.span.0,
+                            expr.span.1,
+                        )]);
+                    }
+                }
+                "~" => {
+                    // bitwise complement
+                    let child_kind = &self.get_expr_type(&expr[0])?;
+                    if child_kind == "int" {
+                        return Ok("bool".to_string());
+                    } else {
+                        self.errored = true;
+                        return Err(vec![Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Expr),
+                            expr.span.0,
+                            expr.span.1,
+                        )]);
+                    }
+                }
+                "!" => {
+                    let child_kind = &self.get_expr_type(&expr[0])?;
+                    if child_kind == "bool" {
+                        return Ok("bool".to_string());
+                    } else {
+                        self.errored = true;
+                        return Err(vec![Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Expr),
+                            expr.span.0,
+                            expr.span.1,
+                        )]);
+                    }
+                }
+                _ => panic!("Invalid string of expr_data when dealing with one child in expr"),
+            }
+        }
+
+        let mut errs = Vec::new();
+
+        // TODO if Expr has no children then we return what?
+        let lhs = self.get_expr_type(&expr[0]).map_err(|e| errs.extend(e));
+        let rhs = self.get_expr_type(&expr[1]).map_err(|e| errs.extend(e));
+        if !errs.is_empty() {
+            return Err(errs);
+        }
+        let lhs = lhs.unwrap();
+        let rhs = rhs.unwrap();
+        // assert_eq!(AstKind::Expr, expr.kind);
+        let op = expr.data.as_str();
+        match expr.kind {
+            AstKind::Plus => {
+                if lhs == rhs && (lhs == "float" || lhs == "int") {
+                    Ok(lhs)
+                } else if (lhs == "float" || lhs == "int") && (rhs == "float" || rhs == "int") {
+                    Ok("float".to_string())
+                } else {
+                    self.errored = true;
+                    Err(vec![Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Expr),
+                        expr.span.0,
+                        expr.span.1,
+                    )])
+                }
+            }
+            AstKind::Bools => {
+                let op = expr.data.as_str();
+                if is_numeric(&lhs) && is_numeric(&rhs) {
+                    Ok("bool".to_string())
+                } else if lhs == rhs && (op == "==" || op == "!=") {
+                    Ok("bool".to_string())
+                } else {
+                    self.errored = true;
+                    Err(vec![Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Expr),
+                        expr.span.0,
+                        expr.span.1,
+                    )])
+                }
+            }
+            AstKind::Times => {
+                if op == "mod" {
+                    if lhs == rhs && lhs == "int" {
+                        Ok(lhs)
+                    } else {
+                        self.errored = true;
+                        Err(vec![Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Expr),
+                            expr.span.0,
+                            expr.span.1,
+                        )])
+                    }
+                } else if lhs == rhs && (lhs == "float" || lhs == "int") {
+                    Ok(lhs)
+                } else if (lhs == "float" || lhs == "int") && (rhs == "float" || rhs == "int") {
+                    Ok("float".to_string())
+                } else {
+                    self.errored = true;
+                    Err(vec![Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::Expr),
+                        expr.span.0,
+                        expr.span.1,
+                    )])
+                }
+            }
+            _ => panic!("Bad astkind where there should be expr"),
+        }
+    }
+
+    // fn compare_result(lhs: &str, rhs: &str) -> String {
+
+    //     if lhs == "float" && rhs == "int" {
+    //         return "float".to_string()
+    //     }
+
+    // }
 
     fn stmt(&mut self, stmt: &AstNode) {
         assert_eq!(AstKind::Statement, stmt.kind);
@@ -225,18 +369,21 @@ impl SymbolVisitor {
         let ty = lhs;
 
         for comma in comma_list {
-            self.handle_comma(ty, comma);
+            if let Err(h) = self.handle_comma(ty, comma) {
+                h.iter().for_each(|h| println!("{}", h.show_output()));
+            }
         }
     }
 
-    fn handle_comma(&mut self, ty: &AstNode, comma: &AstNode) {
+    fn handle_comma(&mut self, ty: &AstNode, comma: &AstNode) -> Result<(), Vec<Hazard>> {
+        println!("{:?}", comma);
         // Either an identifier or an assign list
-        let child = &comma[0];
+        // let child = &comma[0];
 
         let (is_const, string_ty) = get_decl_type(ty);
 
         // There is a single identifier
-        match child.children.as_slice() {
+        match comma.children.as_slice() {
             [ident] => self.table.push_symbol(
                 self.scope,
                 string_ty,
@@ -245,7 +392,16 @@ impl SymbolVisitor {
                 is_const,
             ),
             [ids @ .., expr] => {
+                let expr_ty = self.get_expr_type(expr)?;
                 for ident in ids {
+                    if !is_valid_conversion(&string_ty, &expr_ty) {
+                        let h = Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Conversion),
+                            comma.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
+                            comma.span.1,
+                        );
+                        return Err(vec![h]);
+                    }
                     self.table.push_symbol_init(
                         self.scope,
                         string_ty.clone(),
@@ -260,14 +416,47 @@ impl SymbolVisitor {
             }
             [] => panic!("There must be at least one child"),
         }
+        Ok(())
     }
 }
 
+pub fn is_numeric(ty: &str) -> bool {
+    ty == "float" || ty == "int"
+}
+
 pub fn get_decl_type(ty: &AstNode) -> (bool, String) {
-    let is_const = ty.children.len() > 1;
-    let string_ty = ty[1].data.clone();
+    let is_const = ty.data.contains("const");
+    let string_ty = ty.data.split(' ').rev().next().unwrap().clone().to_string();
 
     (is_const, string_ty)
+}
+
+pub fn is_valid_conversion(var_type: &str, val_type: &str) -> bool {
+    match val_type {
+        "string" => match var_type {
+            "int" => false,
+            "float" => false,
+            "bool" => false,
+            _ => true,
+        },
+        "float" => match var_type {
+            "int" => false,
+            "bool" => false,
+            "string" => false,
+            _ => true,
+        },
+        "bool" => match var_type {
+            "float" => false,
+            "string" => false,
+            _ => true,
+        },
+        "int" => match var_type {
+            "bool" => false,
+            "string" => false,
+            _ => true,
+        },
+        _ => panic!("unknown lhs passed into valid conversion"),
+    }
 }
 
 // #[cfg(test)]
