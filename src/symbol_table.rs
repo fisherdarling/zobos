@@ -407,7 +407,20 @@ impl SymbolVisitor {
 
     // }
 
-    fn handle_emit(&mut self, emit: &AstNode) {}
+    fn handle_emit(&mut self, emit: &AstNode) {
+        // This is a specific identifier:
+        if emit.children.len() == 3 {
+            let ident = &emit[0];
+
+            let symbol = self.table.get_symbol(&ident.data, self.scope);
+
+            if let Some(symbol) = symbol {
+                symbol.used.set(true);
+            } else {
+                // ERROR: NOVAR
+            }
+        }
+    }
 
     fn stmt(&mut self, stmt: &AstNode) {
         // println!("Stmt: {}", stmt.kind.to_string());
@@ -440,9 +453,14 @@ impl SymbolVisitor {
 
     // Pushing and popping scopes and stuff:
     fn brace_stmt(&mut self, brace: &AstNode) {
+        self.scope += 1;
+
         for child in &brace.children {
             self.stmt(child); // call stmt on all of the brace child children
         }
+
+        self.scope -= 1;
+        // TODO: Clean table of all symbols with scope = self.scope + 1
     }
 
     fn assign_stmt(&mut self, assign: &AstNode) {
