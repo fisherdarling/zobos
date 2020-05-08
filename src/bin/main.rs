@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
+use std::path::PathBuf;
 use structopt::StructOpt;
 use zobos::parser::Parser;
-
-use std::path::PathBuf;
+use zobos::symbol_table::*;
 
 #[derive(Debug, Clone, StructOpt)]
 pub struct Args {
@@ -24,5 +24,9 @@ fn main() {
     let ast = tree.create_ast();
     std::fs::create_dir("test");
     ast.export_graph(PathBuf::from("test").join(dot_out.file_name().unwrap()));
+
+    let mut sv = SymbolVisitor::new();
+
+    sv.program(&ast);
     //println!("{:#?}", tree);
 }

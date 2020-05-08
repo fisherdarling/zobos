@@ -21,35 +21,6 @@ pub struct Conversion;
 //     }
 // }
 
-pub fn is_valid_conversion(lhs: &str, rhs: &str) -> bool {
-    match lhs {
-        "string" => match rhs {
-            "int" => false,
-            "float" => false,
-            "bool" => false,
-            _ => true,
-        },
-        "float" => match rhs {
-            "int" => false,
-            "bool" => false,
-            "string" => false,
-            _ => true,
-        },
-        "bool" => match rhs {
-            "float" => false,
-            "string" => false,
-            _ => true,
-        },
-        "int" => match rhs {
-            "bool" => false,
-            "string" => false,
-            _ => true,
-        },
-        _ => panic!("unknown lhs passed into valid conversion"),
-    }
-}
-// asdfs
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -57,8 +28,8 @@ mod tests {
     #[test]
     fn test_conversions() {
         assert!(is_valid_conversion("int", "int"));
-        assert!(is_valid_conversion("int", "float"));
-        assert!(!is_valid_conversion("string", "int"));
-        assert!(!is_valid_conversion("bool", "string"));
+        assert!(is_valid_conversion("float", "int"));
+        assert!(!is_valid_conversion("int", "string"));
+        assert!(!is_valid_conversion("string", "bool"));
     }
 }
