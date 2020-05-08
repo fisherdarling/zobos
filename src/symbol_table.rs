@@ -359,11 +359,15 @@ impl SymbolVisitor {
                     )])
                 }
             }
-            AstKind::Bools => {
+            AstKind::Bools | AstKind::Eq => {
                 let op = expr.data.as_str();
                 if is_numeric(&lhs) && is_numeric(&rhs) {
                     Ok("bool".to_string())
-                } else if lhs == rhs && (op == "==" || op == "!=") {
+                } else if lhs == rhs
+                    || (lhs.contains("bool") && rhs.contains("int")
+                        || rhs.contains("bool") && lhs.contains("int"))
+                        && (op == "==" || op == "!=")
+                {
                     Ok("bool".to_string())
                 } else {
                     self.errored = true;
@@ -399,7 +403,10 @@ impl SymbolVisitor {
                     )])
                 }
             }
-            _ => panic!("Bad astkind where there should be expr"),
+            e => panic!(format!(
+                "Bad astkind where there should be expr: {:?}",
+                expr
+            )),
         }
     }
 
@@ -654,12 +661,14 @@ impl SymbolVisitor {
             }
         }
     }
-
     fn handle_comma(&mut self, ty: &AstNode, comma: &AstNode) -> Result<(), Vec<Hazard>> {
         // println!("DeclId: {}", comma.kind.to_string());
         // println!("{:?}", comma);
         // Either an identifier or an assign list
+        // let child = &comma[0];        // Either an identifier or an assign list
         // let child = &comma[0];
+
+        // println!("{}\n", self.table.output());
 
         let (is_const, string_ty) = get_decl_type(ty);
 
@@ -676,6 +685,7 @@ impl SymbolVisitor {
                 let expr_ty = self.get_expr_type(expr)?;
                 for ident in ids {
                     if !is_valid_conversion(&string_ty, &expr_ty) {
+                        println!("NOT VALID: {} <- {}", string_ty, expr_ty);
                         let h = Hazard::new_one_loc(
                             HazardType::ErrorT(ErrorId::Conversion),
                             comma.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
@@ -736,7 +746,7 @@ pub fn is_valid_conversion(var_type: &str, val_type: &str) -> bool {
             _ => true,
         },
         "int" => match var_type {
-            "bool" => false,
+            // Check table with keith
             "string" => false,
             _ => true,
         },
