@@ -94,6 +94,10 @@ impl SymbolTable {
             .collect()
     }
 
+    pub fn clean_table(&mut self, scope: usize) {
+        self.symbols.retain(|s| s.scope < scope);
+    }
+
     pub fn write_to_file(&self, path: &PathBuf) {
         let out = self.output();
         let mut file = File::create(path).unwrap();
@@ -459,6 +463,7 @@ impl SymbolVisitor {
             self.stmt(child); // call stmt on all of the brace child children
         }
 
+        self.table.clean_table(self.scope);
         self.scope -= 1;
         // TODO: Clean table of all symbols with scope = self.scope + 1
     }
