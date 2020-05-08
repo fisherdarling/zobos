@@ -253,6 +253,7 @@ impl AstNode {
 
     fn simplify_assign(&self, assign: &AstNode) -> AstNode { // TODO add fisher opt
         let mut retval = AstNode::new(AstKind::Eq);
+        retval.span = assign[1].span.clone();
         if assign.children[2].kind == AstKind::Expr {  // ASSIGN -> id assign EXPR
             retval.children.push(assign.children[0].clone());
             retval.children.push(self.simplify_expr(&assign.children[2]));
