@@ -700,6 +700,14 @@ impl SymbolVisitor {
             [ids @ .., expr] => {
                 let expr_ty = self.get_expr_type(expr)?;
                 for ident in ids {
+                    self.table.push_symbol_init(
+                        self.scope,
+                        string_ty.clone(),
+                        ident.data.clone(),
+                        ident.span,
+                        is_const,
+                    );
+
                     if !is_valid_conversion(&string_ty, &expr_ty) {
                         println!("NOT VALID: {} <- {}", string_ty, expr_ty);
                         let h = Hazard::new_one_loc(
@@ -709,14 +717,6 @@ impl SymbolVisitor {
                         );
                         return Err(vec![h]);
                     }
-
-                    self.table.push_symbol_init(
-                        self.scope,
-                        string_ty.clone(),
-                        ident.data.clone(),
-                        ident.span,
-                        is_const,
-                    );
 
                     // TODO: Determine expr type and check it
                     // with string_ty
