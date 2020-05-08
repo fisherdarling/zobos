@@ -380,6 +380,8 @@ impl SymbolVisitor {
 
     // }
 
+    fn handle_emit(&mut self, emit: &AstNode) {}
+
     fn stmt(&mut self, stmt: &AstNode) {
         assert_eq!(AstKind::Statement, stmt.kind);
 
@@ -387,8 +389,12 @@ impl SymbolVisitor {
             AstKind::DecList => {
                 self.decl_list(&stmt[0]);
             }
-            AstKind::Assign => {}
-            AstKind::Emit => {}
+            AstKind::Assign => {
+                self.assign_stmt(&stmt[0]);
+            }
+            AstKind::Emit => {
+                self.handle_emit(&stmt[0]);
+            }
             AstKind::If => {}
             AstKind::IfElse => {}
             AstKind::While => {}
@@ -396,6 +402,17 @@ impl SymbolVisitor {
             _ => panic!("Unsupported Stmt Child"),
         }
     }
+
+    // Pushing and popping scopes and stuff:
+    fn brace_stmt(&mut self, brace: &AstNode) {}
+
+    fn assign_stmt(&mut self, assign: &AstNode) {}
+
+    fn if_stmt_stmt(&mut self, if_: &AstNode) {}
+
+    fn if_else_stmt(&mut self, if_else: &AstNode) {}
+
+    fn while_stmt(&mut self, while_: &AstNode) {}
 
     fn decl_list(&mut self, stmt: &AstNode) {
         // At this point the lhs child is a type and
