@@ -177,7 +177,7 @@ impl AstNode {
         assert_eq!(AstKind::Stmts, stmts.kind);
 
         if stmts.children.is_empty() {
-            return vec![]
+            return vec![];
         }
         let mut list = self.simplify_stmts(&stmts.children[0]);
         list.push(self.simplify_stmt(&stmts.children[1]));
@@ -186,7 +186,7 @@ impl AstNode {
 
     fn simplify_stmt(&self, stmt: &AstNode) -> AstNode {
         assert_eq!(AstKind::Statement, stmt.kind);
-        let mut new_node = AstNode::new(AstKind::Statement); 
+        let mut new_node = AstNode::new(AstKind::Statement);
 
         match stmt[0].kind {
             AstKind::DecList => new_node.children.push(self.simplify_decl_list(&stmt[0])),
@@ -213,11 +213,13 @@ impl AstNode {
 
     fn simplify_dec_ids(&self, decl_ids: &AstNode) -> Vec<AstNode> {
         assert_eq!(AstKind::DeclIds, decl_ids.kind);
-        if decl_ids.children.len() == 1 {  // DECLIDS -> DECLID
+        if decl_ids.children.len() == 1 {
+            // DECLIDS -> DECLID
             let id = self.simplify_dec_id(&decl_ids.children[0]);
             let ids = vec![id];
             return ids;
-        } else {  // DECLIDS -> DECLIDS comma DECLID
+        } else {
+            // DECLIDS -> DECLIDS comma DECLID
             let mut ids = self.simplify_dec_ids(&decl_ids.children[0]);
             let id = self.simplify_dec_id(&decl_ids.children[2]);
             ids.push(id);
@@ -230,17 +232,19 @@ impl AstNode {
         let mut new_id = AstNode::new(AstKind::DeclId);
         let child = &decl_id.children[0];
 
-        if child.kind == AstKind::Identifier {  // DECLID -> id
+        if child.kind == AstKind::Identifier {
+            // DECLID -> id
             let ident = child.clone();
             new_id.children.push(ident);
             return new_id;
-        } else {  // DECLID -> ASSIGN
+        } else {
+            // DECLID -> ASSIGN
             new_id.children.push(self.simplify_assign(child));
         }
         new_id
     }
 
-    fn simplify_decl_type (&self, atype: &AstNode) -> AstNode {
+    fn simplify_decl_type(&self, atype: &AstNode) -> AstNode {
         if atype.children.len() > 1 {
             let mut new_node = AstNode::new(AstKind::DeclType);
             new_node.data = atype[0].data.to_owned();
@@ -251,25 +255,35 @@ impl AstNode {
         atype.children[0].clone()
     }
 
-    fn simplify_assign(&self, assign: &AstNode) -> AstNode { // TODO add fisher opt
+    fn simplify_assign(&self, assign: &AstNode) -> AstNode {
+        // TODO add fisher opt
         let mut retval = AstNode::new(AstKind::Eq);
         retval.span = assign[1].span.clone();
-        if assign.children[2].kind == AstKind::Expr {  // ASSIGN -> id assign EXPR
+        if assign.children[2].kind == AstKind::Expr {
+            // ASSIGN -> id assign EXPR
             retval.children.push(assign.children[0].clone());
-            retval.children.push(self.simplify_expr(&assign.children[2]));
-        } else {  //ASSIGN -> id assign Assign
+            retval
+                .children
+                .push(self.simplify_expr(&assign.children[2]));
+        } else {
+            //ASSIGN -> id assign Assign
             retval.children.push(assign.children[0].clone());
-            retval.children.append(&mut self.simplify_assign_rec(&assign.children[2]));
+            retval
+                .children
+                .append(&mut self.simplify_assign_rec(&assign.children[2]));
         }
         retval
     }
-    
-    fn simplify_assign_rec(&self, assign: &AstNode) -> Vec<AstNode> { // TODO add fisher opt
+
+    fn simplify_assign_rec(&self, assign: &AstNode) -> Vec<AstNode> {
+        // TODO add fisher opt
         let mut retval: Vec<AstNode> = Vec::new();
-        if assign.children[2].kind == AstKind::Expr {  // ASSIGN -> id assign EXPR
+        if assign.children[2].kind == AstKind::Expr {
+            // ASSIGN -> id assign EXPR
             retval.push(assign.children[0].clone());
             retval.push(self.simplify_expr(&assign.children[2]));
-        } else {  //ASSIGN -> id assign Assign
+        } else {
+            //ASSIGN -> id assign Assign
             retval.push(assign.children[0].clone());
             retval.append(&mut self.simplify_assign_rec(&assign.children[2]));
         }
@@ -281,7 +295,7 @@ impl AstNode {
         match child.kind {
             AstKind::ArithmeticExpr => self.simplify_aexpr(child),
             AstKind::BooleanExpr => self.simplify_bexpr(child),
-            _ => panic!("Bad Expr")
+            _ => panic!("Bad Expr"),
         }
     }
 
@@ -290,20 +304,24 @@ impl AstNode {
     }
 
     fn simplify_sum(&self, sum: &AstNode) -> AstNode {
-        if sum.children.len() == 1 { //SUM -> PRODUCT
+        if sum.children.len() == 1 {
+            //SUM -> PRODUCT
             return self.simplify_prod(&sum.children[0]);
-        } else { //SUM -> SUM PLUS PRODUCT
+        } else {
+            //SUM -> SUM PLUS PRODUCT
             let mut plus = AstNode::new(AstKind::Plus);
             plus.children.push(self.simplify_sum(&sum.children[0]));
             plus.children.push(self.simplify_prod(&sum.children[2]));
             return plus;
         }
     }
-    
+
     fn simplify_prod(&self, prod: &AstNode) -> AstNode {
-        if prod.children.len() == 1 {  // PRODUCT -> VAlUE
-            return self.simplify_value(&prod.children[0])
-        } else {  // PRODUCT -> PRODUCT TIMES VALUE
+        if prod.children.len() == 1 {
+            // PRODUCT -> VAlUE
+            return self.simplify_value(&prod.children[0]);
+        } else {
+            // PRODUCT -> PRODUCT TIMES VALUE
             let mut times = AstNode::new(AstKind::Times);
             times.children.push(self.simplify_prod(&prod.children[0]));
             times.children.push(self.simplify_value(&prod.children[2]));
@@ -311,7 +329,7 @@ impl AstNode {
         }
     }
 
-    fn simplify_plus (&self, plus: &AstNode) -> AstNode {
+    fn simplify_plus(&self, plus: &AstNode) -> AstNode {
         plus.children[0].clone()
     }
 
@@ -343,23 +361,25 @@ impl AstNode {
             AstKind::Plus => new_node = self.simplify_plus(child),
             _ => new_node = child.clone(),
         };
-        new_node.children.push(self.simplify_value(&unary.children[1]));
+        new_node
+            .children
+            .push(self.simplify_value(&unary.children[1]));
         new_node
     }
 
     fn simplify_cast(&self, cast: &AstNode) -> AstNode {
         let mut new_node = AstNode::new(AstKind::Cast);
         new_node.children.push(cast.children[0].clone());
-        new_node.children.push(self.simplify_aexpr(&cast.children[1]));
+        new_node
+            .children
+            .push(self.simplify_aexpr(&cast.children[1]));
         new_node
     }
 
     fn simplify_bexpr(&self, expr: &AstNode) -> AstNode {
         let mut bools = self.simplify_bool(&expr[1]);
-        println!("{}", bools.kind);
         bools.children.push(self.simplify_aexpr(&expr.children[0]));
         bools.children.push(self.simplify_aexpr(&expr.children[2]));
-        println!("{}", bools.children.len());
         bools
     }
 
@@ -369,11 +389,17 @@ impl AstNode {
 
     fn simplify_emit(&self, emit: &AstNode) -> AstNode {
         let mut new_node = AstNode::new(AstKind::Emit);
-        if emit.children.len() == 4 {  // EMIT -> emit id AEXPR AEXPR
+        if emit.children.len() == 4 {
+            // EMIT -> emit id AEXPR AEXPR
             new_node.children.push(emit[1].clone());
-            new_node.children.push(self.simplify_aexpr(&emit.children[2]));
-            new_node.children.push(self.simplify_aexpr(&emit.children[3]));
-        } else {  // EMIT -> emit symtable
+            new_node
+                .children
+                .push(self.simplify_aexpr(&emit.children[2]));
+            new_node
+                .children
+                .push(self.simplify_aexpr(&emit.children[3]));
+        } else {
+            // EMIT -> emit symtable
             new_node.children.push(AstNode::new(AstKind::Symtable));
         }
         new_node
@@ -381,29 +407,43 @@ impl AstNode {
 
     fn simplify_if(&self, aif: &AstNode) -> AstNode {
         let mut new_node = AstNode::new(AstKind::If);
-        new_node.children.push(self.simplify_bexpr(&aif.children[2]));
+        new_node
+            .children
+            .push(self.simplify_bexpr(&aif.children[2]));
         new_node.children.push(self.simplify_stmt(&aif.children[4]));
         new_node
     }
 
     fn simplify_ifelse(&self, ifelse: &AstNode) -> AstNode {
         let mut new_node = AstNode::new(AstKind::IfElse);
-        new_node.children.push(self.simplify_bexpr(&ifelse.children[2]));
-        new_node.children.push(self.simplify_brace(&ifelse.children[4]));
-        new_node.children.push(self.simplify_stmt(&ifelse.children[6]));
+        new_node
+            .children
+            .push(self.simplify_bexpr(&ifelse.children[2]));
+        new_node
+            .children
+            .push(self.simplify_brace(&ifelse.children[4]));
+        new_node
+            .children
+            .push(self.simplify_stmt(&ifelse.children[6]));
         new_node
     }
 
     fn simplify_while(&self, awhile: &AstNode) -> AstNode {
         let mut new_node = AstNode::new(AstKind::While);
-        new_node.children.push(self.simplify_bexpr(&awhile.children[2]));
-        new_node.children.push(self.simplify_stmt(&awhile.children[4]));
+        new_node
+            .children
+            .push(self.simplify_bexpr(&awhile.children[2]));
+        new_node
+            .children
+            .push(self.simplify_stmt(&awhile.children[4]));
         new_node
     }
 
     fn simplify_brace(&self, brace: &AstNode) -> AstNode {
         let mut new_node = AstNode::new(AstKind::BraceStmt);
-        new_node.children.append(&mut self.simplify_stmts(&brace.children[1]));
+        new_node
+            .children
+            .append(&mut self.simplify_stmts(&brace.children[1]));
         new_node
     }
 
