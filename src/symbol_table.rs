@@ -201,7 +201,7 @@ impl SymbolVisitor {
     }
 
     /// expected_type is what the expr should evaluate too. Returns a type
-    pub fn get_expr_type(&mut self, expr: &AstNode) -> Result<String, Hazard> {
+    pub fn get_expr_type(&mut self, expr: &AstNode) -> Result<String, Vec<Hazard>> {
         // a < (b + c)
 
         if expr.children.is_empty() {
@@ -220,11 +220,12 @@ impl SymbolVisitor {
                     if is_numeric(child_kind) {
                         return Ok(child_kind.clone());
                     } else {
-                        return Err(Hazard::new_one_loc(
+                        self.errored = true;
+                        return Err(vec![Hazard::new_one_loc(
                             HazardType::ErrorT(ErrorId::Expr),
                             expr.span.0,
                             expr.span.1,
-                        ));
+                        )]);
                     }
                 }
                 "~" => {
@@ -233,11 +234,12 @@ impl SymbolVisitor {
                     if child_kind == "int" {
                         return Ok("bool".to_string());
                     } else {
-                        return Err(Hazard::new_one_loc(
+                        self.errored = true;
+                        return Err(vec![Hazard::new_one_loc(
                             HazardType::ErrorT(ErrorId::Expr),
                             expr.span.0,
                             expr.span.1,
-                        ));
+                        )]);
                     }
                 }
                 "!" => {
@@ -245,20 +247,28 @@ impl SymbolVisitor {
                     if child_kind == "bool" {
                         return Ok("bool".to_string());
                     } else {
-                        return Err(Hazard::new_one_loc(
+                        self.errored = true;
+                        return Err(vec![Hazard::new_one_loc(
                             HazardType::ErrorT(ErrorId::Expr),
                             expr.span.0,
                             expr.span.1,
-                        ));
+                        )]);
                     }
                 }
                 _ => panic!("Invalid string of expr_data when dealing with one child in expr"),
             }
         }
 
+        let mut errs = Vec::new();
+
         // TODO if Expr has no children then we return what?
-        let lhs = self.get_expr_type(&expr[0])?;
-        let rhs = self.get_expr_type(&expr[1])?;
+        let lhs = self.get_expr_type(&expr[0]).map_err(|e| errs.extend(e));
+        let rhs = self.get_expr_type(&expr[1]).map_err(|e| errs.extend(e));
+        if !errs.is_empty() {
+            return Err(errs);
+        }
+        let lhs = lhs.unwrap();
+        let rhs = rhs.unwrap();
         // assert_eq!(AstKind::Expr, expr.kind);
         let op = expr.data.as_str();
         match expr.kind {
@@ -268,11 +278,12 @@ impl SymbolVisitor {
                 } else if (lhs == "float" || lhs == "int") && (rhs == "float" || rhs == "int") {
                     Ok("float".to_string())
                 } else {
-                    Err(Hazard::new_one_loc(
+                    self.errored = true;
+                    Err(vec![Hazard::new_one_loc(
                         HazardType::ErrorT(ErrorId::Expr),
                         expr.span.0,
                         expr.span.1,
-                    ))
+                    )])
                 }
             }
             AstKind::Bools => {
@@ -282,11 +293,12 @@ impl SymbolVisitor {
                 } else if lhs == rhs && (op == "==" || op == "!=") {
                     Ok("bool".to_string())
                 } else {
-                    Err(Hazard::new_one_loc(
+                    self.errored = true;
+                    Err(vec![Hazard::new_one_loc(
                         HazardType::ErrorT(ErrorId::Expr),
                         expr.span.0,
                         expr.span.1,
-                    ))
+                    )])
                 }
             }
             AstKind::Times => {
@@ -294,22 +306,24 @@ impl SymbolVisitor {
                     if lhs == rhs && lhs == "int" {
                         Ok(lhs)
                     } else {
-                        Err(Hazard::new_one_loc(
+                        self.errored = true;
+                        Err(vec![Hazard::new_one_loc(
                             HazardType::ErrorT(ErrorId::Expr),
                             expr.span.0,
                             expr.span.1,
-                        ))
+                        )])
                     }
                 } else if lhs == rhs && (lhs == "float" || lhs == "int") {
                     Ok(lhs)
                 } else if (lhs == "float" || lhs == "int") && (rhs == "float" || rhs == "int") {
                     Ok("float".to_string())
                 } else {
-                    Err(Hazard::new_one_loc(
+                    self.errored = true;
+                    Err(vec![Hazard::new_one_loc(
                         HazardType::ErrorT(ErrorId::Expr),
                         expr.span.0,
                         expr.span.1,
-                    ))
+                    )])
                 }
             }
             _ => panic!("Bad astkind where there should be expr"),
@@ -355,11 +369,13 @@ impl SymbolVisitor {
         let ty = lhs;
 
         for comma in comma_list {
-            self.handle_comma(ty, comma);
+            if let Err(h) = self.handle_comma(ty, comma) {
+                h.iter().for_each(|h| println!("{}", h.show_output()));
+            }
         }
     }
 
-    fn handle_comma(&mut self, ty: &AstNode, comma: &AstNode) -> Result<(), Hazard> {
+    fn handle_comma(&mut self, ty: &AstNode, comma: &AstNode) -> Result<(), Vec<Hazard>> {
         println!("{:?}", comma);
         // Either an identifier or an assign list
         // let child = &comma[0];
@@ -381,10 +397,10 @@ impl SymbolVisitor {
                     if !is_valid_conversion(&string_ty, &expr_ty) {
                         let h = Hazard::new_one_loc(
                             HazardType::ErrorT(ErrorId::Conversion),
-                            ident.span.0, // TODO have to point this to assign node?
-                            ident.span.1,
+                            comma.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
+                            comma.span.1,
                         );
-                        return Err(h);
+                        return Err(vec![h]);
                     }
                     self.table.push_symbol_init(
                         self.scope,
