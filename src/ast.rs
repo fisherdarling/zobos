@@ -258,7 +258,19 @@ impl AstNode {
             retval.children.push(self.simplify_expr(&assign.children[2]));
         } else {  //ASSIGN -> id assign Assign
             retval.children.push(assign.children[0].clone());
-            retval.children.push(self.simplify_assign(&assign.children[2]));
+            retval.children.append(&mut self.simplify_assign_rec(&assign.children[2]));
+        }
+        retval
+    }
+    
+    fn simplify_assign_rec(&self, assign: &AstNode) -> Vec<AstNode> { // TODO add fisher opt
+        let mut retval: Vec<AstNode> = Vec::new();
+        if assign.children[2].kind == AstKind::Expr {  // ASSIGN -> id assign EXPR
+            retval.push(assign.children[0].clone());
+            retval.push(self.simplify_expr(&assign.children[2]));
+        } else {  //ASSIGN -> id assign Assign
+            retval.push(assign.children[0].clone());
+            retval.append(&mut self.simplify_assign_rec(&assign.children[2]));
         }
         retval
     }
