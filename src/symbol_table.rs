@@ -80,6 +80,13 @@ impl SymbolTable {
         self.symbols.iter().filter(|s| s.scope == scope).collect() // FISHER should we change this to 'in or below scope and make it a <?
     }
 
+    pub fn get_symbol(&self, ident: &str, scope: usize) -> Option<&Symbol> {
+        self.symbols_in_scope(scope)
+            .iter()
+            .find(|s| s.ident == ident)
+            .cloned()
+    }
+
     pub fn symbols_in_scope_mut(&mut self, scope: usize) -> Vec<&mut Symbol> {
         self.symbols
             .iter_mut()
@@ -104,7 +111,7 @@ impl SymbolTable {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Symbol {
     pub scope: usize,
     pub const_: bool,
@@ -438,7 +445,53 @@ impl SymbolVisitor {
         }
     }
 
-    fn assign_stmt(&mut self, assign: &AstNode) {}
+    fn assign_stmt(&mut self, assign: &AstNode) {
+        // Get the identifier and its type
+        let ident = &assign[0].data;
+        let symbol = self.table.get_symbol(ident, self.scope).cloned();
+
+        let rhs_type = self.get_expr_type(&assign[1]).clone();
+
+        match symbol {
+            Some(symbol) => {
+                let lhs_ty = symbol.ty;
+
+                if symbol.const_ {
+                    let h = Hazard::new_one_loc(
+                        HazardType::Warn(WarnId::Const),
+                        assign[0].span.0,
+                        assign[0].span.1,
+                    );
+
+                    println!("{}", h.show_output());
+                }
+
+                if let Ok(ref rhs_ty) = rhs_type {
+                    if !is_valid_conversion(&lhs_ty, rhs_ty) {
+                        let h = Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::Conversion),
+                            assign.span.0,
+                            assign.span.1,
+                        );
+
+                        println!("{}", h.show_output());
+                        self.errored = true;
+                    }
+                }
+            }
+            None => {
+                let h = Hazard::new_one_loc(
+                    HazardType::ErrorT(ErrorId::NoVar),
+                    assign[0].span.0,
+                    assign[0].span.1,
+                );
+            }
+        }
+
+        if let Err(ref e) = rhs_type {
+            e.iter().for_each(|h| println!("{}", h.show_output()));
+        }
+    }
 
     fn if_stmt_stmt(&mut self, if_: &AstNode) {}
 
