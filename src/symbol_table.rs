@@ -373,8 +373,8 @@ impl SymbolVisitor {
                 if is_numeric(&lhs) && is_numeric(&rhs) {
                     Ok("bool".to_string())
                 } else if lhs == rhs
-                    || (lhs.contains("bool") && rhs.contains("int")
-                        || rhs.contains("bool") && lhs.contains("int"))
+                    // || (lhs.contains("bool") && rhs.contains("int")
+                        // || rhs.contains("bool") && lhs.contains("int"))
                         && (op == "==" || op == "!=")
                 {
                     Ok("bool".to_string())
