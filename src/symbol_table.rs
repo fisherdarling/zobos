@@ -209,7 +209,43 @@ impl SymbolVisitor {
                 AstKind::Integer => return Ok("int".to_string()),
                 AstKind::Float => return Ok("float".to_string()),
                 AstKind::String => return Ok("string".to_string()),
-                _ => panic!("invalid kind for bottom node in expr tree"),
+                AstKind::Identifier => {
+                    if let Some(ident) = self
+                        .table
+                        .symbols_in_valid_scope()
+                        .iter()
+                        .find(|s| s.ident == expr.data)
+                    {
+                        ident.used.set(true);
+
+                        if ident.initialized.get() {
+                            return Ok(ident.ty.clone());
+                        } else {
+                            let warn = Hazard::new_one_loc(
+                                HazardType::Warn(WarnId::Uninit),
+                                expr.span.0,
+                                expr.span.1,
+                            );
+
+                            println!("{}", warn.show_output());
+
+                            return Ok(ident.ty.clone());
+                        }
+                    } else {
+                        // Identifier doesn't even exist:
+                        let h = Hazard::new_one_loc(
+                            HazardType::ErrorT(ErrorId::NoVar),
+                            expr.span.0,
+                            expr.span.1,
+                        );
+
+                        return Err(vec![h]);
+                    }
+                }
+                e => panic!(format!(
+                    "invalid kind for bottom node in expr tree: {:?}",
+                    e
+                )),
             }
         }
 

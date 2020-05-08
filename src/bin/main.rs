@@ -26,7 +26,8 @@ fn main() {
     ast.export_graph(PathBuf::from("test").join(dot_out.file_name().unwrap()));
 
     let mut sv = SymbolVisitor::new();
-
     sv.program(&ast);
+
+    sv.report_unused();
     //println!("{:#?}", tree);
 }
