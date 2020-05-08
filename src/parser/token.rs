@@ -38,8 +38,16 @@ impl TokenStream {
         let id = split.next()?.to_string();
         let data = split.next()?.to_string();
         let span = (
-            split.next()?.parse().unwrap(),
-            split.next()?.parse().unwrap(),
+            split
+                .next()
+                .unwrap_or_else(|| std::process::exit(1))
+                .parse()
+                .unwrap(),
+            split
+                .next()
+                .unwrap_or_else(|| std::process::exit(1))
+                .parse()
+                .unwrap(),
         );
 
         Some(Token { id, data, span })
