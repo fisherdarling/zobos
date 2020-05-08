@@ -1,3 +1,5 @@
+#![feature(with_options)]
+
 pub mod ast;
 pub mod hazards;
 pub mod parser;

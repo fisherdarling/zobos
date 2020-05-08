@@ -100,7 +100,13 @@ impl SymbolTable {
 
     pub fn write_to_file(&self, path: &PathBuf) {
         let out = self.output();
-        let mut file = File::create(path).unwrap();
+        let mut file = File::with_options()
+            .write(true)
+            .append(true)
+            .create(true)
+            .open(path)
+            .unwrap();
+
         file.write_all(out.as_bytes()).unwrap();
     }
 
@@ -159,12 +165,15 @@ impl Symbol {
 pub struct SymbolVisitor {
     table: SymbolTable,
     scope: usize,
-    errored: bool,
+    pub errored: bool,
+    output_path: std::path::PathBuf,
 }
 
 impl SymbolVisitor {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(output_path: std::path::PathBuf) -> Self {
+        let mut new = Self::default();
+        new.output_path = output_path;
+        new
     }
 
     pub fn write_table_to_file(&self, path: &PathBuf) {
@@ -421,15 +430,22 @@ impl SymbolVisitor {
     fn handle_emit(&mut self, emit: &AstNode) {
         // This is a specific identifier:
         if emit.children.len() == 3 {
-            let ident = &emit[0];
-
-            let symbol = self.table.get_symbol(&ident.data, self.scope);
-
-            if let Some(symbol) = symbol {
-                symbol.used.set(true);
-            } else {
-                // ERROR: NOVAR
+            for child in &emit.children {
+                if let Err(e) = self.get_expr_type(child) {
+                    e.iter().for_each(|h| println!("{}", h.show_output()));
+                }
             }
+        // let ident = &emit[0];
+
+        // let symbol = self.table.get_symbol(&ident.data, self.scope);
+
+        // if let Some(symbol) = symbol {
+        //     symbol.used.set(true);
+        // } else {
+        //     // ERROR: NOVAR
+        // }
+        } else if emit.children.len() == 1 {
+            self.table.write_to_file(&self.output_path);
         }
     }
 
