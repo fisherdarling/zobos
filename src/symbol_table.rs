@@ -475,7 +475,7 @@ impl SymbolVisitor {
         }
 
         let brace_stmt = &while_[1][0];
-        
+
         self.brace_stmt(brace_stmt);
     }
 
@@ -530,7 +530,7 @@ impl SymbolVisitor {
                     }
 
                     self.table.push_symbol_init(
-                        self.scfn assign_stmt(&mut self, assign: &AstNode) {}ope,
+                        self.scope,
                         string_ty.clone(),
                         ident.data.clone(),
                         ident.span,
