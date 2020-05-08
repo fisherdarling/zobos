@@ -22,7 +22,7 @@ fn main() {
 
     let tree = parser
         .parse(args.token_input)
-        .unwrap_or_else(|e| std::process::exit(1));
+        .unwrap_or_else(|| std::process::exit(1));
     let ast = tree.create_ast();
     ast.export_graph(&args.ast_output);
 
