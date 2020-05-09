@@ -493,7 +493,9 @@ impl SymbolVisitor {
             AstKind::While => {
                 self.while_stmt(&stmt[0]);
             }
-            AstKind::BraceStmt => {}
+            AstKind::BraceStmt => {
+                self.brace_stmt(&stmt[0]);
+            }
             s => panic!(format!(
                 "Unsupported Stmt Child: {}: {:?}",
                 s.to_string(),
