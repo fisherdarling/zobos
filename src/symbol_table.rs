@@ -535,6 +535,8 @@ impl SymbolVisitor {
                                 assign.span.1,
                             );
 
+                            symbol.initialized.set(true);
+
                             println!("{}", h.show_output());
                             self.errored = true;
                         } else {
