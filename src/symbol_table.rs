@@ -398,7 +398,7 @@ impl SymbolVisitor {
                 }
             }
             AstKind::Times => {
-                if op == "mod" {
+                if op == "%" {
                     if lhs == rhs && lhs == "int" {
                         Ok(lhs)
                     } else {
