@@ -742,8 +742,8 @@ impl SymbolVisitor {
             [] => self.table.push_symbol(
                 self.scope,
                 string_ty,
-                comma[0].data.clone(),
-                comma[0].span,
+                comma.data.clone(),
+                comma.span,
                 is_const,
             ),
             // [ident] => self.table.push_symbol(
