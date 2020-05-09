@@ -76,12 +76,12 @@ impl SymbolTable {
             .collect()
     }
 
-    pub fn symbols_in_scope(&self, scope: usize) -> Vec<&Symbol> {
-        self.symbols.iter().filter(|s| s.scope == scope).collect() // FISHER should we change this to 'in or below scope and make it a <?
-    }
+    // pub fn symbols_in_scope(&self, scope: usize) -> Vec<&Symbol> {
+    //     self.symbols.iter().filter(|s| s.scope == scope).collect() // FISHER should we change this to 'in or below scope and make it a <?
+    // }
 
     pub fn get_symbol(&self, ident: &str, scope: usize) -> Option<&Symbol> {
-        self.symbols_in_scope(scope)
+        self.symbols_in_valid_scope(scope)
             .iter()
             .find(|s| s.ident == ident)
             .cloned()
@@ -181,12 +181,12 @@ impl SymbolVisitor {
     }
 
     pub fn current_symbols(&self) -> Vec<&Symbol> {
-        self.table.symbols_in_scope(self.scope)
+        self.table.symbols_in_valid_scope(self.scope)
     }
 
     pub fn exists(&self, ident: &str) -> bool {
         (0..=self.scope)
-            .map(|s| self.table.symbols_in_scope(s).into_iter())
+            .map(|s| self.table.symbols_in_valid_scope(s).into_iter())
             .flatten()
             .any(|s| s.ident == ident)
     }
@@ -194,7 +194,7 @@ impl SymbolVisitor {
     pub fn initialized(&self, ident: &str) -> bool {
         for symbols in (0..=self.scope)
             .rev()
-            .map(|s| self.table.symbols_in_scope(s))
+            .map(|s| self.table.symbols_in_valid_scope(s))
         {
             for symbol in symbols {
                 if symbol.ident == ident {
@@ -209,7 +209,7 @@ impl SymbolVisitor {
     pub fn set_used(&self, ident: &str) {
         for symbols in (0..=self.scope)
             .rev()
-            .map(|s| self.table.symbols_in_scope(s))
+            .map(|s| self.table.symbols_in_valid_scope(s))
         {
             for symbol in symbols {
                 if symbol.ident == ident {
@@ -541,14 +541,14 @@ impl SymbolVisitor {
                     }
                 }
                 None => {
-                    let h = Hazard::new_one_loc(
-                        HazardType::ErrorT(ErrorId::NoVar),
-                        assign[0].span.0,
-                        assign[0].span.1,
-                    );
+                    // let h = Hazard::new_one_loc(
+                    //     HazardType::ErrorT(ErrorId::NoVar),
+                    //     assign[0].span.0,
+                    //     assign[0].span.1,
+                    // );
 
-                    self.errored = true;
-                    println!("{}", h.show_output());
+                    // self.errored = true;
+                    // println!("{}", h.show_output());
                 }
             }
         }
