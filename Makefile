@@ -7,3 +7,4 @@ build:
 clean:
 		cargo clean
 		rm -rf test/
+		rm ZOBOS
