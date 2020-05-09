@@ -154,6 +154,9 @@ impl Symbol {
         let mut out = String::new();
         out.push_str(&self.scope.to_string());
         out.push(',');
+        if self.const_ {
+            out.push_str("const");
+        }
         out.push_str(&self.ty.to_string());
         out.push(',');
         out.push_str(&self.ident.to_string());
