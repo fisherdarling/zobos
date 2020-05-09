@@ -43,7 +43,6 @@ impl SymbolTable {
 
     /// will emit an error if is redeclare, and not add it to the scope
     pub fn check_for_redeclare(&self, ident: &str, scope: usize, span: (usize, usize)) -> bool {
-        println!("chkcing if ident: {}, scope: {} is redeclare", ident, scope);
         let current_valid_symbols = self.symbols_in_valid_scope(scope);
         let is_redeclare = current_valid_symbols
             .iter()
@@ -53,6 +52,11 @@ impl SymbolTable {
                 Hazard::new_one_loc(HazardType::Warn(WarnId::RedeclareVar), span.0, span.1);
             println!("{}", redeclare_warn.show_output());
         }
+        println!(
+            "chkcing if ident: {}, scope: {} is redeclare: {}",
+            ident, scope, is_redeclare
+        );
+        // gitprintln!("is it? ")
         is_redeclare
     }
 
