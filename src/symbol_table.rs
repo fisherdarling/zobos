@@ -511,11 +511,11 @@ impl SymbolVisitor {
 
         for child in 0..assign.children.len() - 1 {
             let ident = &assign[child].data;
-            let symbol = self.table.get_symbol(ident, self.scope).cloned();
+            let symbol = self.table.get_symbol(ident, self.scope);
 
             match symbol {
                 Some(symbol) => {
-                    let lhs_ty = symbol.ty;
+                    let lhs_ty = &symbol.ty;
 
                     if symbol.const_ {
                         let h = Hazard::new_one_loc(
@@ -539,6 +539,8 @@ impl SymbolVisitor {
                             self.errored = true;
                         }
                     }
+
+                    symbol.initialized.set(true);
                 }
                 None => {
                     // let h = Hazard::new_one_loc(
