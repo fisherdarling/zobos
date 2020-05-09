@@ -228,11 +228,11 @@ impl SymbolVisitor {
         }
     }
 
-    pub fn report_unused(&self) {
+    pub fn report_unused(&self, scope: usize) {
         self.table
             .symbols
             .iter()
-            .filter(|s| !s.used.get())
+            .filter(|s| !s.used.get() && s.scope == scope)
             .for_each(|s| {
                 let hazard =
                     Hazard::new_one_loc(HazardType::Warn(WarnId::Unused), s.span.0, s.span.1);
@@ -512,6 +512,7 @@ impl SymbolVisitor {
             self.stmt(child); // call stmt on all of the brace child children
         }
 
+        self.report_unused(self.scope);
         self.table.clean_table(self.scope);
         self.scope -= 1;
         // TODO: Clean table of all symbols with scope = self.scope + 1

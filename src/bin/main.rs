@@ -29,7 +29,7 @@ fn main() {
     let mut sv = SymbolVisitor::new(args.table_output);
     sv.program(&ast);
 
-    sv.report_unused();
+    sv.report_unused(0);
 
     if sv.errored {
         std::process::exit(1);
