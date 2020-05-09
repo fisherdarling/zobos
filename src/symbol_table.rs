@@ -537,10 +537,10 @@ impl SymbolVisitor {
 
                             println!("{}", h.show_output());
                             self.errored = true;
+                        } else {
+                            symbol.initialized.set(true);
                         }
                     }
-
-                    symbol.initialized.set(true);
                 }
                 None => {
                     // let h = Hazard::new_one_loc(
