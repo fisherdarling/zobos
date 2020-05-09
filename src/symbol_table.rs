@@ -532,6 +532,8 @@ impl SymbolVisitor {
                         println!("{}", h.show_output());
                     }
 
+                    symbol.used.set(true);
+
                     if let Ok(ref rhs_ty) = rhs_type {
                         if !is_valid_conversion(&lhs_ty, rhs_ty) {
                             let h = Hazard::new_one_loc(
@@ -552,14 +554,14 @@ impl SymbolVisitor {
                     }
                 }
                 None => {
-                    // let h = Hazard::new_one_loc(
-                    //     HazardType::ErrorT(ErrorId::NoVar),
-                    //     assign[0].span.0,
-                    //     assign[0].span.1,
-                    // );
+                    let h = Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::NoVar),
+                        assign[child].span.0,
+                        assign[child].span.1,
+                    );
 
-                    // self.errored = true;
-                    // println!("{}", h.show_output());
+                    self.errored = true;
+                    println!("{}", h.show_output());
                 }
             }
         }
