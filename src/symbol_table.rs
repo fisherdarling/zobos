@@ -682,13 +682,17 @@ impl SymbolVisitor {
         let lhs = &stmt.children[0];
 
         // We have nice flattened tree:
-        let comma_list = &stmt[1].children;
+        // let comma_list = &stmt[1].children;
 
         let ty = lhs;
 
-        for comma in comma_list {
-            if let Err(h) = self.handle_comma(ty, comma) {
-                h.iter().for_each(|h| println!("{}", h.show_output()));
+        for decl_list_child in stmt.children.iter().skip(1) {
+            for comma in &decl_list_child.children {
+                // println!("Comma: {:?}", comma);
+                if let Err(h) = self.handle_comma(ty, comma) {
+                    h.iter().for_each(|h| println!("{}", h.show_output()));
+                }
+                // println!("{}\n", self.table.output());
             }
         }
     }
@@ -721,7 +725,8 @@ impl SymbolVisitor {
             //     is_const,
             // ),
             [ids @ .., expr] => {
-                let expr_ty = self.get_expr_type(expr)?;
+                let mut errors = Vec::new();
+                let expr_ty = self.get_expr_type(expr);
                 for ident in ids {
                     self.table.push_symbol_init(
                         self.scope,
@@ -731,19 +736,28 @@ impl SymbolVisitor {
                         is_const,
                     );
 
-                    if !is_valid_conversion(&string_ty, &expr_ty) {
-                        // println!("NOT VALID: {} <- {}", string_ty, expr_ty);
-                        let h = Hazard::new_one_loc(
-                            HazardType::ErrorT(ErrorId::Conversion),
-                            comma.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
-                            comma.span.1,
-                        );
-                        self.errored = true;
-                        return Err(vec![h]);
+                    if let Ok(ref expr_ty) = expr_ty {
+                        if !is_valid_conversion(&string_ty, &expr_ty) {
+                            // println!("NOT VALID: {} <- {}", string_ty, expr_ty);
+                            let h = Hazard::new_one_loc(
+                                HazardType::ErrorT(ErrorId::Conversion),
+                                comma.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
+                                comma.span.1,
+                            );
+                            self.errored = true;
+                            errors.push(h);
+                        }
                     }
 
                     // TODO: Determine expr type and check it
                     // with string_ty
+                }
+                if let Err(e) = expr_ty {
+                    errors.extend(e.into_iter());
+                }
+
+                if !errors.is_empty() {
+                    return Err(errors);
                 }
             }
             [] => panic!("There must be at least one child"),
