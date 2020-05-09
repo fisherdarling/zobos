@@ -336,7 +336,7 @@ impl AstNode {
         } else {
             // PRODUCT -> PRODUCT TIMES VALUE
             let mut times = AstNode::new(AstKind::Times);
-            times.span = times[1][0].span;
+            times.span = prod[1][0].span;
             times.children.push(self.simplify_prod(&prod.children[0]));
             times.children.push(self.simplify_value(&prod.children[2]));
             return times;
