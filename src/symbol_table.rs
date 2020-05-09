@@ -553,8 +553,8 @@ impl SymbolVisitor {
                 None => {
                     let h = Hazard::new_one_loc(
                         HazardType::ErrorT(ErrorId::NoVar),
-                        assign[0].span.0,
-                        assign[0].span.1,
+                        assign[child].span.0,
+                        assign[child].span.1,
                     );
 
                     self.errored = true;
