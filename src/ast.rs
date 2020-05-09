@@ -322,6 +322,7 @@ impl AstNode {
         } else {
             //SUM -> SUM PLUS PRODUCT
             let mut plus = AstNode::new(AstKind::Plus);
+            plus.data = sum[1][0].data.clone();
             plus.span = sum[1][0].span;
             plus.children.push(self.simplify_sum(&sum.children[0]));
             plus.children.push(self.simplify_prod(&sum.children[2]));
@@ -336,6 +337,7 @@ impl AstNode {
         } else {
             // PRODUCT -> PRODUCT TIMES VALUE
             let mut times = AstNode::new(AstKind::Times);
+            times.data = prod[1][0].data.clone();
             times.span = prod[1][0].span;
             times.children.push(self.simplify_prod(&prod.children[0]));
             times.children.push(self.simplify_value(&prod.children[2]));
