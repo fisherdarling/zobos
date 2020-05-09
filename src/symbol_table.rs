@@ -520,8 +520,8 @@ impl SymbolVisitor {
                     if symbol.const_ {
                         let h = Hazard::new_one_loc(
                             HazardType::Warn(WarnId::Const),
-                            assign[0].span.0,
-                            assign[0].span.1,
+                            &assign[child].span.0,
+                            &assign[child].span.1,
                         );
 
                         println!("{}", h.show_output());
