@@ -679,7 +679,7 @@ impl SymbolVisitor {
         let lhs = &stmt.children[0];
 
         // We have nice flattened tree:
-        let comma_list = &stmt.children[1].children;
+        let comma_list = &stmt[1].children;
 
         let ty = lhs;
 
@@ -702,13 +702,21 @@ impl SymbolVisitor {
 
         // There is a single identifier
         match comma.children.as_slice() {
-            [ident] => self.table.push_symbol(
+            // It is a single identifier
+            [] => self.table.push_symbol(
                 self.scope,
                 string_ty,
-                ident.data.clone(),
-                ident.span,
+                comma.data.clone(),
+                comma.span,
                 is_const,
             ),
+            // [ident] => self.table.push_symbol(
+            //     self.scope,
+            //     string_ty,
+            //     ident.data.clone(),
+            //     ident.span,
+            //     is_const,
+            // ),
             [ids @ .., expr] => {
                 let expr_ty = self.get_expr_type(expr)?;
                 for ident in ids {
