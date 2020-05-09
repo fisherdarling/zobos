@@ -343,6 +343,16 @@ impl SymbolVisitor {
 
         let mut errs = Vec::new();
 
+        if let AstKind::Cast = expr.kind {
+            let cast_type = expr[0].data.clone();
+            let rhs = self.get_expr_type(&expr[1]);
+
+            match rhs {
+                Ok(_) => return Ok(cast_type),
+                Err(e) => return Err(e),
+            }
+        }
+
         // TODO if Expr has no children then we return what?
         let lhs = self.get_expr_type(&expr[0]).map_err(|e| errs.extend(e));
         let rhs = self.get_expr_type(&expr[1]).map_err(|e| errs.extend(e));
