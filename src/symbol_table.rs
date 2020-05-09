@@ -284,7 +284,7 @@ impl SymbolVisitor {
                             expr.span.0,
                             expr.span.1,
                         );
-
+                        self.errored = true;
                         return Err(vec![h]);
                     }
                 }
@@ -546,6 +546,9 @@ impl SymbolVisitor {
                         assign[0].span.0,
                         assign[0].span.1,
                     );
+
+                    self.errored = true;
+                    println!("{}", h.show_output());
                 }
             }
         }
