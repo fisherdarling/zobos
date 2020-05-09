@@ -523,7 +523,8 @@ impl SymbolVisitor {
         // Get the identifier and its type
 
         for child in 0..assign.children.len() - 1 {
-            let ident = &assign[child].data;
+            let equal = &assign[child];
+            let ident = &assign[child][0].data;
             let symbol = self.table.get_symbol(ident, self.scope);
 
             match symbol {
@@ -533,8 +534,8 @@ impl SymbolVisitor {
                     if symbol.const_ {
                         let h = Hazard::new_one_loc(
                             HazardType::Warn(WarnId::Const),
-                            assign[child].span.0,
-                            assign[child].span.1,
+                            assign[child][0].span.0,
+                            assign[child][0].span.1,
                         );
 
                         println!("{}", h.show_output());
@@ -548,8 +549,8 @@ impl SymbolVisitor {
                         if !is_valid_conversion(&lhs_ty, rhs_ty) {
                             let h = Hazard::new_one_loc(
                                 HazardType::ErrorT(ErrorId::Conversion),
-                                assign.span.0,
-                                assign.span.1,
+                                assign[child][0].span.0,
+                                assign[child][0].span.1,
                             );
 
                             symbol.initialized.set(true);
@@ -566,8 +567,8 @@ impl SymbolVisitor {
                 None => {
                     let h = Hazard::new_one_loc(
                         HazardType::ErrorT(ErrorId::NoVar),
-                        assign[child].span.0,
-                        assign[child].span.1,
+                        assign[child][0].span.0,
+                        assign[child][0].span.1,
                     );
 
                     self.errored = true;
@@ -741,8 +742,8 @@ impl SymbolVisitor {
             [] => self.table.push_symbol(
                 self.scope,
                 string_ty,
-                comma.data.clone(),
-                comma.span,
+                comma[0].data.clone(),
+                comma[0].span,
                 is_const,
             ),
             // [ident] => self.table.push_symbol(
@@ -752,10 +753,12 @@ impl SymbolVisitor {
             //     ident.span,
             //     is_const,
             // ),
-            [ids @ .., expr] => {
+            [equals @ .., expr] => {
                 let mut errors = Vec::new();
                 let expr_ty = self.get_expr_type(expr);
-                for ident in ids {
+                for equal in equals {
+                    let ident = &equal[0];
+
                     self.table.push_symbol_init(
                         self.scope,
                         string_ty.clone(),
@@ -769,8 +772,8 @@ impl SymbolVisitor {
                             // println!("NOT VALID: {} <- {}", string_ty, expr_ty);
                             let h = Hazard::new_one_loc(
                                 HazardType::ErrorT(ErrorId::Conversion),
-                                comma.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
-                                comma.span.1,
+                                equal.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
+                                equal.span.1,
                             );
                             self.errored = true;
                             errors.push(h);

@@ -261,13 +261,19 @@ impl AstNode {
         retval.span = assign[1].span.clone();
         if assign.children[2].kind == AstKind::Expr {
             // ASSIGN -> id assign EXPR
-            retval.children.push(assign.children[0].clone());
+            let mut equals = AstNode::new(AstKind::Eq);
+            equals.span = assign[1].span;
+            equals.children.push(assign[0].clone());
+            retval.children.push(equals);
             retval
                 .children
                 .push(self.simplify_expr(&assign.children[2]));
         } else {
             //ASSIGN -> id assign Assign
-            retval.children.push(assign.children[0].clone());
+            let mut equals = AstNode::new(AstKind::Eq);
+            equals.span = assign[1].span;
+            equals.children.push(assign[0].clone());
+            retval.children.push(equals);
             retval
                 .children
                 .append(&mut self.simplify_assign_rec(&assign.children[2]));
@@ -280,11 +286,17 @@ impl AstNode {
         let mut retval: Vec<AstNode> = Vec::new();
         if assign.children[2].kind == AstKind::Expr {
             // ASSIGN -> id assign EXPR
-            retval.push(assign.children[0].clone());
+            let mut equals = AstNode::new(AstKind::Eq);
+            equals.span = assign[1].span;
+            equals.children.push(assign[0].clone());
+            retval.push(equals);
             retval.push(self.simplify_expr(&assign.children[2]));
         } else {
+            let mut equals = AstNode::new(AstKind::Eq);
+            equals.span = assign[1].span;
+            equals.children.push(assign[0].clone());
             //ASSIGN -> id assign Assign
-            retval.push(assign.children[0].clone());
+            retval.push(equals);
             retval.append(&mut self.simplify_assign_rec(&assign.children[2]));
         }
         retval
