@@ -639,8 +639,13 @@ impl SymbolVisitor {
         }
         // probably have something like above but for now I am going to assume #2 is something like
         // Statement -> BraceStmt -> Statement
-        let false_brace = &if_else[2][0];
-        self.brace_stmt(&false_brace);
+        if if_else[2][0].kind == AstKind::BraceStmt {
+            let false_brace = &if_else[2][0];
+            self.brace_stmt(&false_brace);
+        } else if if_else[2][0].kind == AstKind::IfElse {
+            self.if_else_stmt(&if_else[2][0]);
+        }
+
         // let true_brace_stmt = &if_else[1][0];
         // let false_brace_stmt = &if_else[2][0];
 
