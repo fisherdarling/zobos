@@ -372,7 +372,7 @@ impl AstNode {
         new_node.children.push(cast.children[0].clone());
         new_node
             .children
-            .push(self.simplify_aexpr(&cast.children[1]));
+            .push(self.simplify_aexpr(&cast.children[2]));
         new_node
     }
 
