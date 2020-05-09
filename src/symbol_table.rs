@@ -363,6 +363,7 @@ impl SymbolVisitor {
         let rhs = rhs.unwrap();
         // assert_eq!(AstKind::Expr, expr.kind);
         let op = expr.data.as_str();
+        println!("Op: {}, Kind: {}", op, expr.kind);
         match expr.kind {
             AstKind::Plus => {
                 if lhs == rhs && (lhs == "float" || lhs == "int") {
