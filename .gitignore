@@ -3,4 +3,4 @@ Cargo.lock
 test/**
 ZOBOS
 *.sym
-.DS_Store
+*.DS_Store
