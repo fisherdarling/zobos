@@ -549,8 +549,8 @@ impl SymbolVisitor {
                         if !is_valid_conversion(&lhs_ty, rhs_ty) {
                             let h = Hazard::new_one_loc(
                                 HazardType::ErrorT(ErrorId::Conversion),
-                                assign[child][0].span.0,
-                                assign[child][0].span.1,
+                                assign[child].span.0,
+                                assign[child].span.1,
                             );
 
                             symbol.initialized.set(true);
