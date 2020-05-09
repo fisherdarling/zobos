@@ -537,7 +537,7 @@ impl SymbolVisitor {
 
                             println!("{}", h.show_output());
                             self.errored = true;
-                        } else {
+                        } else if !symbol.const_ {
                             symbol.initialized.set(true);
                         }
                     }
