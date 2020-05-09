@@ -77,6 +77,7 @@ impl SymbolTable {
     pub fn symbols_in_valid_scope(&self, current_scope: usize) -> Vec<&Symbol> {
         self.symbols
             .iter()
+            .rev()
             .filter(|s| s.scope <= current_scope)
             .collect()
     }
