@@ -540,7 +540,7 @@ impl SymbolVisitor {
                         println!("{}", h.show_output());
                     }
 
-                    symbol.used.set(true);
+                    // symbol.used.set(true);
 
                     if let Ok(ref rhs_ty) = rhs_type {
                         if !is_valid_conversion(&lhs_ty, rhs_ty) {
