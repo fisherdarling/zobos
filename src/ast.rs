@@ -322,6 +322,7 @@ impl AstNode {
         } else {
             //SUM -> SUM PLUS PRODUCT
             let mut plus = AstNode::new(AstKind::Plus);
+            plus.span = sum[1].span;
             plus.children.push(self.simplify_sum(&sum.children[0]));
             plus.children.push(self.simplify_prod(&sum.children[2]));
             return plus;
