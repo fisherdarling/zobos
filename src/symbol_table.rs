@@ -496,45 +496,47 @@ impl SymbolVisitor {
     }
 
     fn assign_stmt(&mut self, assign: &AstNode) {
+        let rhs_type = self.get_expr_type(&assign.children.last().unwrap()).clone();
         // Get the identifier and its type
-        let ident = &assign[0].data;
-        let symbol = self.table.get_symbol(ident, self.scope).cloned();
 
-        let rhs_type = self.get_expr_type(&assign[1]).clone();
+        for child in 0..assign.children.len() - 1 {
+            let ident = &assign[child].data;
+            let symbol = self.table.get_symbol(ident, self.scope).cloned();
 
-        match symbol {
-            Some(symbol) => {
-                let lhs_ty = symbol.ty;
+            match symbol {
+                Some(symbol) => {
+                    let lhs_ty = symbol.ty;
 
-                if symbol.const_ {
-                    let h = Hazard::new_one_loc(
-                        HazardType::Warn(WarnId::Const),
-                        assign[0].span.0,
-                        assign[0].span.1,
-                    );
-
-                    println!("{}", h.show_output());
-                }
-
-                if let Ok(ref rhs_ty) = rhs_type {
-                    if !is_valid_conversion(&lhs_ty, rhs_ty) {
+                    if symbol.const_ {
                         let h = Hazard::new_one_loc(
-                            HazardType::ErrorT(ErrorId::Conversion),
-                            assign.span.0,
-                            assign.span.1,
+                            HazardType::Warn(WarnId::Const),
+                            assign[0].span.0,
+                            assign[0].span.1,
                         );
 
                         println!("{}", h.show_output());
-                        self.errored = true;
+                    }
+
+                    if let Ok(ref rhs_ty) = rhs_type {
+                        if !is_valid_conversion(&lhs_ty, rhs_ty) {
+                            let h = Hazard::new_one_loc(
+                                HazardType::ErrorT(ErrorId::Conversion),
+                                assign.span.0,
+                                assign.span.1,
+                            );
+
+                            println!("{}", h.show_output());
+                            self.errored = true;
+                        }
                     }
                 }
-            }
-            None => {
-                let h = Hazard::new_one_loc(
-                    HazardType::ErrorT(ErrorId::NoVar),
-                    assign[0].span.0,
-                    assign[0].span.1,
-                );
+                None => {
+                    let h = Hazard::new_one_loc(
+                        HazardType::ErrorT(ErrorId::NoVar),
+                        assign[0].span.0,
+                        assign[0].span.1,
+                    );
+                }
             }
         }
 
@@ -709,7 +711,7 @@ impl SymbolVisitor {
                     );
 
                     if !is_valid_conversion(&string_ty, &expr_ty) {
-                        println!("NOT VALID: {} <- {}", string_ty, expr_ty);
+                        // println!("NOT VALID: {} <- {}", string_ty, expr_ty);
                         let h = Hazard::new_one_loc(
                             HazardType::ErrorT(ErrorId::Conversion),
                             comma.span.0, // TODO have to point this to assign node? Liam needs to change assignment node to keep span
